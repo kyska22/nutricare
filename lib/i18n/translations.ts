@@ -17,22 +17,22 @@ export const translations = {
     },
     sections: {
       psychobiological: {
-        number: "01",
+        number: "05",
         title: "Hábitos psicobiológicos",
         description: "Actividad física e hidratación habitual.",
       },
       gastrointestinal: {
-        number: "02",
+        number: "06",
         title: "Hábitos gastrointestinales",
         description: "Frecuencia, características y síntomas digestivos.",
       },
       recall: {
-        number: "03",
+        number: "08",
         title: "Recordatorio de 24 horas",
         description: "Escriba lo que comió y bebió el día anterior.",
       },
       anthropometrics: {
-        number: "04",
+        number: "10",
         title: "Datos antropométricos",
         description: "Medidas actuales del paciente.",
       },
@@ -207,28 +207,38 @@ export const translations = {
       },
     },
     clinicalHistory: {
-      progress: "8 secciones",
-      anthropometricsNumber: "08",
+      progress: "10 secciones",
+      anthropometricsNumber: "10",
       sections: {
         personalInformation: {
-          number: "04",
-          title: "Información personal",
-          description: "Datos de identificación y motivo de la consulta.",
+          number: "01",
+          title: "Datos personales",
+          description: "Datos de identificación de la persona evaluada.",
+        },
+        consultationReason: {
+          number: "02",
+          title: "Motivo de consulta",
+          description: "Tipo de consulta y objetivos de la evaluación.",
         },
         personalHistory: {
-          number: "05",
+          number: "03",
           title: "Antecedentes personales",
           description: "Antecedentes médicos, quirúrgicos y obstétricos.",
         },
         familyHistory: {
-          number: "06",
+          number: "04",
           title: "Antecedentes familiares",
           description: "Condiciones y antecedentes relevantes del núcleo familiar.",
         },
-        dietaryHabits: {
+        foodPreferences: {
           number: "07",
-          title: "Hábitos alimentarios",
-          description: "Alergias, lugar de consumo y frecuencia semanal.",
+          title: "Preferencias alimentarias",
+          description: "Alergias, preferencias y lugar habitual de consumo.",
+        },
+        foodFrequency: {
+          number: "09",
+          title: "Frecuencia semanal de consumo",
+          description: "Frecuencia habitual de consumo por grupo de alimentos.",
         },
       },
       fields: {
@@ -487,22 +497,22 @@ export const translations = {
     },
     sections: {
       psychobiological: {
-        number: "01",
+        number: "05",
         title: "Hábitos psicobiológicos",
         description: "Atividade física e hidratação habitual.",
       },
       gastrointestinal: {
-        number: "02",
+        number: "06",
         title: "Hábitos gastrointestinais",
         description: "Frequência, características e sintomas digestivos.",
       },
       recall: {
-        number: "03",
+        number: "08",
         title: "Recordatório de 24 horas",
         description: "Escreva o que comeu e bebeu no dia anterior.",
       },
       anthropometrics: {
-        number: "04",
+        number: "10",
         title: "Dados antropométricos",
         description: "Medidas atuais do paciente.",
       },
@@ -677,28 +687,38 @@ export const translations = {
       },
     },
     clinicalHistory: {
-      progress: "8 seções",
-      anthropometricsNumber: "08",
+      progress: "10 seções",
+      anthropometricsNumber: "10",
       sections: {
         personalInformation: {
-          number: "04",
-          title: "Informações pessoais",
-          description: "Dados de identificação e motivo da consulta.",
+          number: "01",
+          title: "Dados pessoais",
+          description: "Dados de identificação da pessoa avaliada.",
+        },
+        consultationReason: {
+          number: "02",
+          title: "Motivo da consulta",
+          description: "Tipo de consulta e objetivos da avaliação.",
         },
         personalHistory: {
-          number: "05",
+          number: "03",
           title: "Antecedentes pessoais",
           description: "Antecedentes médicos, cirúrgicos e obstétricos.",
         },
         familyHistory: {
-          number: "06",
+          number: "04",
           title: "Antecedentes familiares",
           description: "Condições e antecedentes relevantes da família.",
         },
-        dietaryHabits: {
+        foodPreferences: {
           number: "07",
-          title: "Hábitos alimentares",
-          description: "Alergias, local de consumo e frequência semanal.",
+          title: "Preferências alimentares",
+          description: "Alergias, preferências e local habitual de consumo.",
+        },
+        foodFrequency: {
+          number: "09",
+          title: "Frequência semanal de consumo",
+          description: "Frequência habitual de consumo por grupo de alimentos.",
         },
       },
       fields: {
@@ -957,22 +977,22 @@ export const translations = {
     },
     sections: {
       psychobiological: {
-        number: "01",
+        number: "05",
         title: "Psychobiological habits",
         description: "Usual physical activity and hydration.",
       },
       gastrointestinal: {
-        number: "02",
+        number: "06",
         title: "Gastrointestinal habits",
         description: "Frequency, characteristics, and digestive symptoms.",
       },
       recall: {
-        number: "03",
+        number: "08",
         title: "24-hour recall",
         description: "Write down what you ate and drank yesterday.",
       },
       anthropometrics: {
-        number: "04",
+        number: "10",
         title: "Anthropometric data",
         description: "The patient’s current measurements.",
       },
@@ -1147,28 +1167,38 @@ export const translations = {
       },
     },
     clinicalHistory: {
-      progress: "8 sections",
-      anthropometricsNumber: "08",
+      progress: "10 sections",
+      anthropometricsNumber: "10",
       sections: {
         personalInformation: {
-          number: "04",
-          title: "Personal information",
-          description: "Identification details and reason for consultation.",
+          number: "01",
+          title: "Personal data",
+          description: "Identification details for the person being assessed.",
+        },
+        consultationReason: {
+          number: "02",
+          title: "Reason for consultation",
+          description: "Consultation type and assessment goals.",
         },
         personalHistory: {
-          number: "05",
+          number: "03",
           title: "Personal history",
           description: "Medical, surgical, and obstetric history.",
         },
         familyHistory: {
-          number: "06",
+          number: "04",
           title: "Family history",
           description: "Relevant family conditions and health history.",
         },
-        dietaryHabits: {
+        foodPreferences: {
           number: "07",
-          title: "Eating habits",
-          description: "Allergies, eating location, and weekly frequency.",
+          title: "Food preferences",
+          description: "Allergies, preferences, and usual eating location.",
+        },
+        foodFrequency: {
+          number: "09",
+          title: "Weekly consumption frequency",
+          description: "Usual consumption frequency by food group.",
         },
       },
       fields: {

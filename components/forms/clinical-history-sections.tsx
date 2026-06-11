@@ -78,8 +78,6 @@ export function PersonalInformationSection({
 }: ClinicalSectionProps) {
   const { t } = useI18n();
   const sectionErrors = errors.personalInformation;
-  const selectedReasons =
-    watch("personalInformation.consultationReasons") ?? [];
   const birthDate = watch("personalInformation.birthDate");
   const calculatedAge = birthDate ? calculateAge(birthDate) : null;
 
@@ -90,19 +88,6 @@ export function PersonalInformationSection({
       description={t("clinicalHistory.sections.personalInformation.description")}
     >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <SelectField
-          name="personalInformation.consultationType"
-          label={t("clinicalHistory.fields.consultationType")}
-          register={register}
-          error={sectionErrors?.consultationType}
-          placeholder={t("placeholders.select")}
-          optional
-          options={optionList(
-            formOptions.consultationTypes,
-            "clinicalHistory.options.consultationType",
-            t,
-          )}
-        />
         <InputField
           name="personalInformation.firstName"
           label={t("clinicalHistory.fields.firstName")}
@@ -182,7 +167,42 @@ export function PersonalInformationSection({
         />
       </div>
 
-      <div className="mt-8">
+    </FormSection>
+  );
+}
+
+export function ConsultationReasonSection({
+  register,
+  errors,
+  watch,
+}: ClinicalSectionProps) {
+  const { t } = useI18n();
+  const sectionErrors = errors.personalInformation;
+  const selectedReasons =
+    watch("personalInformation.consultationReasons") ?? [];
+
+  return (
+    <FormSection
+      number={t("clinicalHistory.sections.consultationReason.number")}
+      title={t("clinicalHistory.sections.consultationReason.title")}
+      description={t("clinicalHistory.sections.consultationReason.description")}
+    >
+      <div className="mb-8 max-w-md">
+        <SelectField
+          name="personalInformation.consultationType"
+          label={t("clinicalHistory.fields.consultationType")}
+          register={register}
+          error={sectionErrors?.consultationType}
+          placeholder={t("placeholders.select")}
+          optional
+          options={optionList(
+            formOptions.consultationTypes,
+            "clinicalHistory.options.consultationType",
+            t,
+          )}
+        />
+      </div>
+      <div>
         <CheckboxGroup
           label={t("clinicalHistory.fields.consultationReason")}
           name="personalInformation.consultationReasons"
@@ -408,23 +428,18 @@ export function FamilyHistorySection({
   );
 }
 
-export function DietaryHabitsSection({
+export function FoodPreferencesSection({
   register,
   errors,
 }: ClinicalSectionProps) {
   const { t } = useI18n();
   const sectionErrors = errors.dietaryHabits;
-  const frequencyOptions = optionList(
-    formOptions.foodFrequencyValues,
-    "clinicalHistory.options.foodFrequency",
-    t,
-  );
 
   return (
     <FormSection
-      number={t("clinicalHistory.sections.dietaryHabits.number")}
-      title={t("clinicalHistory.sections.dietaryHabits.title")}
-      description={t("clinicalHistory.sections.dietaryHabits.description")}
+      number={t("clinicalHistory.sections.foodPreferences.number")}
+      title={t("clinicalHistory.sections.foodPreferences.title")}
+      description={t("clinicalHistory.sections.foodPreferences.description")}
     >
       <div className="grid gap-6 md:grid-cols-2">
         <TextareaField
@@ -466,11 +481,29 @@ export function DietaryHabitsSection({
           unit={t("clinicalHistory.units.days")}
         />
       </div>
+    </FormSection>
+  );
+}
 
-      <div className="mt-8">
-        <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">
-          {t("clinicalHistory.fields.weeklyFoodFrequency")}
-        </h3>
+export function FoodFrequencySection({
+  register,
+  errors,
+}: ClinicalSectionProps) {
+  const { t } = useI18n();
+  const sectionErrors = errors.dietaryHabits;
+  const frequencyOptions = optionList(
+    formOptions.foodFrequencyValues,
+    "clinicalHistory.options.foodFrequency",
+    t,
+  );
+
+  return (
+    <FormSection
+      number={t("clinicalHistory.sections.foodFrequency.number")}
+      title={t("clinicalHistory.sections.foodFrequency.title")}
+      description={t("clinicalHistory.sections.foodFrequency.description")}
+    >
+      <div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {formOptions.foodGroups.map((group) => (
             <SelectField

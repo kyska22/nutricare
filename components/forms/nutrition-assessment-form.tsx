@@ -11,8 +11,10 @@ import {
   RecallSection,
 } from "./form-sections";
 import {
-  DietaryHabitsSection,
+  ConsultationReasonSection,
   FamilyHistorySection,
+  FoodFrequencySection,
+  FoodPreferencesSection,
   PersonalHistorySection,
   PersonalInformationSection,
 } from "./clinical-history-sections";
@@ -246,14 +248,12 @@ export function NutritionAssessmentForm() {
         </header>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-          <PsychobiologicalSection
+          <PersonalInformationSection
             register={register}
             errors={errors}
             watch={watch}
           />
-          <GastrointestinalSection register={register} errors={errors} />
-          <RecallSection register={register} errors={errors} />
-          <PersonalInformationSection
+          <ConsultationReasonSection
             register={register}
             errors={errors}
             watch={watch}
@@ -268,7 +268,19 @@ export function NutritionAssessmentForm() {
             errors={errors}
             watch={watch}
           />
-          <DietaryHabitsSection
+          <PsychobiologicalSection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
+          <GastrointestinalSection register={register} errors={errors} />
+          <FoodPreferencesSection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
+          <RecallSection register={register} errors={errors} />
+          <FoodFrequencySection
             register={register}
             errors={errors}
             watch={watch}
