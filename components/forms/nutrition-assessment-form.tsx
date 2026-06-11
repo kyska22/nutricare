@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Resolver, useForm } from "react-hook-form";
 import { AssessmentSummary } from "./assessment-summary";
@@ -10,6 +10,12 @@ import {
   PsychobiologicalSection,
   RecallSection,
 } from "./form-sections";
+import {
+  DietaryHabitsSection,
+  FamilyHistorySection,
+  PersonalHistorySection,
+  PersonalInformationSection,
+} from "./clinical-history-sections";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import { Locale } from "@/lib/i18n/translations";
 import { createNutritionAssessmentSchema } from "@/lib/validations/nutrition-assessment-schema";
@@ -18,6 +24,7 @@ import {
   calculateAnthropometricAssessment,
 } from "@/lib/calculations";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
+import { calculateAge } from "@/lib/utils/calculate-age";
 
 const emptyValues = {
   psychobiological: {
@@ -25,6 +32,57 @@ const emptyValues = {
     exerciseType: "",
     exerciseFrequency: "",
     dailyWaterLiters: "",
+    dailyWaterGlasses: undefined,
+    tobacco: undefined,
+    tobaccoQuitTime: undefined,
+    alcohol: undefined,
+    alcoholQuitTime: undefined,
+    coffee: undefined,
+    waterIntakeRange: undefined,
+    averageSleepHours: undefined,
+    sleepQuality: undefined,
+  },
+  personalInformation: {
+    consultationType: undefined,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    country: "",
+    occupation: "",
+    identificationNumber: "",
+    birthDate: "",
+    sex: undefined,
+    consultationReasons: [],
+    otherConsultationReason: "",
+  },
+  personalHistory: {
+    currentOrPreviousDiseases: "",
+    previousDiseases: "",
+    previousSurgeries: "",
+    currentMedications: "",
+    currentSupplements: "",
+    hasChildren: undefined,
+    numberOfChildren: undefined,
+    birthType: undefined,
+  },
+  familyHistory: {
+    fatherAlive: undefined,
+    fatherAge: undefined,
+    motherAlive: undefined,
+    motherAge: undefined,
+    conditions: [],
+    otherCondition: "",
+    fatherDiseases: "",
+    motherDiseases: "",
+    observations: "",
+  },
+  dietaryHabits: {
+    foodAllergies: "",
+    foodPreferences: "",
+    mealsAtHomeDays: undefined,
+    mealsAwayDays: undefined,
+    weeklyFrequency: {},
   },
   gastrointestinal: {
     bowelFrequency: "",
@@ -71,6 +129,8 @@ export function NutritionAssessmentForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<NutritionAssessmentFormValues>({
     // Empty strings are UI-only sentinel values; Zod accepts only AM or PM on submit.
@@ -78,6 +138,32 @@ export function NutritionAssessmentForm() {
     defaultValues: emptyValues as unknown as NutritionAssessmentFormValues,
     mode: "onBlur",
   });
+
+  const birthDate = watch("personalInformation.birthDate");
+  const personalSex = watch("personalInformation.sex");
+
+  useEffect(() => {
+    if (!birthDate) {
+      return;
+    }
+
+    const age = calculateAge(birthDate);
+    if (age !== null && age > 0) {
+      setValue("anthropometrics.age", age, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [birthDate, setValue]);
+
+  useEffect(() => {
+    if (personalSex) {
+      setValue("anthropometrics.sex", personalSex, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [personalSex, setValue]);
 
   const onSubmit = (data: NutritionAssessmentFormValues) => {
     // Future integration point: persist the assessment in the database.
@@ -154,15 +240,39 @@ export function NutritionAssessmentForm() {
               </p>
             </div>
             <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
-              {t("app.progress")}
+              {t("clinicalHistory.progress")}
             </span>
           </div>
         </header>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-          <PsychobiologicalSection register={register} errors={errors} />
+          <PsychobiologicalSection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
           <GastrointestinalSection register={register} errors={errors} />
           <RecallSection register={register} errors={errors} />
+          <PersonalInformationSection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
+          <PersonalHistorySection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
+          <FamilyHistorySection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
+          <DietaryHabitsSection
+            register={register}
+            errors={errors}
+            watch={watch}
+          />
           <AnthropometricsSection register={register} errors={errors} />
 
           <div className="sticky bottom-3 z-10 flex justify-end rounded-2xl border border-emerald-900/10 bg-white/90 p-3 shadow-xl shadow-emerald-950/10 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">

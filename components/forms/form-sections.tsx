@@ -1,6 +1,7 @@
 import {
   FieldErrors,
   UseFormRegister,
+  UseFormWatch,
 } from "react-hook-form";
 import { formOptions } from "@/data/form-options";
 import { useI18n } from "@/lib/i18n/i18n-provider";
@@ -16,6 +17,7 @@ import {
 interface SectionProps {
   register: UseFormRegister<NutritionAssessmentFormValues>;
   errors: FieldErrors<NutritionAssessmentFormValues>;
+  watch?: UseFormWatch<NutritionAssessmentFormValues>;
 }
 
 const mapOptions = (
@@ -31,9 +33,15 @@ const mapOptions = (
         : t(`${prefix}.${value}`),
   }));
 
-export function PsychobiologicalSection({ register, errors }: SectionProps) {
+export function PsychobiologicalSection({
+  register,
+  errors,
+  watch,
+}: SectionProps) {
   const { t } = useI18n();
   const sectionErrors = errors.psychobiological;
+  const tobacco = watch?.("psychobiological.tobacco");
+  const alcohol = watch?.("psychobiological.alcohol");
 
   return (
     <FormSection
@@ -92,6 +100,121 @@ export function PsychobiologicalSection({ register, errors }: SectionProps) {
           step="0.1"
           placeholder={t("placeholders.water")}
           unit={t("fields.waterUnit")}
+        />
+        <InputField
+          name="psychobiological.dailyWaterGlasses"
+          label={t("clinicalHistory.fields.dailyWaterGlasses")}
+          register={register}
+          error={sectionErrors?.dailyWaterGlasses}
+          type="number"
+          min="0"
+          step="1"
+          placeholder={t("clinicalHistory.placeholders.waterGlasses")}
+          unit={t("clinicalHistory.units.glasses")}
+        />
+        <SelectField
+          name="psychobiological.tobacco"
+          label={t("clinicalHistory.fields.tobacco")}
+          register={register}
+          error={sectionErrors?.tobacco}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(
+            formOptions.substanceUseStatuses,
+            "clinicalHistory.options.substanceUse",
+            t,
+          )}
+        />
+        {tobacco === "former" ? (
+          <SelectField
+            name="psychobiological.tobaccoQuitTime"
+            label={t("clinicalHistory.fields.tobaccoQuitTime")}
+            register={register}
+            error={sectionErrors?.tobaccoQuitTime}
+            placeholder={t("placeholders.select")}
+            optional
+            options={mapOptions(
+              formOptions.abandonmentTimes,
+              "clinicalHistory.options.abandonmentTime",
+              t,
+            )}
+          />
+        ) : null}
+        <SelectField
+          name="psychobiological.alcohol"
+          label={t("clinicalHistory.fields.alcohol")}
+          register={register}
+          error={sectionErrors?.alcohol}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(
+            formOptions.substanceUseStatuses,
+            "clinicalHistory.options.substanceUse",
+            t,
+          )}
+        />
+        {alcohol === "former" ? (
+          <SelectField
+            name="psychobiological.alcoholQuitTime"
+            label={t("clinicalHistory.fields.alcoholQuitTime")}
+            register={register}
+            error={sectionErrors?.alcoholQuitTime}
+            placeholder={t("placeholders.select")}
+            optional
+            options={mapOptions(
+              formOptions.abandonmentTimes,
+              "clinicalHistory.options.abandonmentTime",
+              t,
+            )}
+          />
+        ) : null}
+        <SelectField
+          name="psychobiological.coffee"
+          label={t("clinicalHistory.fields.coffee")}
+          register={register}
+          error={sectionErrors?.coffee}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(["yes", "no"], "options.yesNo", t)}
+        />
+        <SelectField
+          name="psychobiological.waterIntakeRange"
+          label={t("clinicalHistory.fields.waterIntakeRange")}
+          register={register}
+          error={sectionErrors?.waterIntakeRange}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(
+            formOptions.waterIntakeRanges,
+            "clinicalHistory.options.waterIntake",
+            t,
+          )}
+        />
+        <SelectField
+          name="psychobiological.averageSleepHours"
+          label={t("clinicalHistory.fields.averageSleepHours")}
+          register={register}
+          error={sectionErrors?.averageSleepHours}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(
+            formOptions.sleepHourRanges,
+            "clinicalHistory.options.sleepHours",
+            t,
+          )}
+        />
+        <SelectField
+          name="psychobiological.sleepQuality"
+          label={t("clinicalHistory.fields.sleepQuality")}
+          register={register}
+          error={sectionErrors?.sleepQuality}
+          placeholder={t("placeholders.select")}
+          optional
+          options={mapOptions(
+            formOptions.sleepQualities,
+            "clinicalHistory.options.sleepQuality",
+            t,
+          )}
         />
       </div>
     </FormSection>
@@ -252,7 +375,7 @@ export function AnthropometricsSection({ register, errors }: SectionProps) {
 
   return (
     <FormSection
-      number={t("sections.anthropometrics.number")}
+      number={t("clinicalHistory.anthropometricsNumber")}
       title={t("sections.anthropometrics.title")}
       description={t("sections.anthropometrics.description")}
     >

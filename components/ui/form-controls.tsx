@@ -16,10 +16,11 @@ interface BaseControlProps<T extends FieldValues> {
 interface SelectFieldProps<T extends FieldValues> extends BaseControlProps<T> {
   placeholder: string;
   options: ReadonlyArray<{ value: string; label: string }>;
+  optional?: boolean;
 }
 
 interface InputFieldProps<T extends FieldValues> extends BaseControlProps<T> {
-  type?: "number" | "time" | "text";
+  type?: "number" | "time" | "text" | "email" | "tel" | "date";
   placeholder?: string;
   step?: string;
   min?: string;
@@ -78,12 +79,18 @@ export function SelectField<T extends FieldValues>({
   required,
   placeholder,
   options,
+  optional,
 }: SelectFieldProps<T>) {
   return (
     <label className="block">
       <FieldLabel label={label} required={required} />
       <select
-        {...register(name)}
+        {...register(
+          name,
+          optional
+            ? { setValueAs: (value) => (value === "" ? undefined : value) }
+            : undefined,
+        )}
         aria-invalid={Boolean(error)}
         className={`${controlClassName} ${error ? "border-rose-400" : "border-emerald-950/15"}`}
         defaultValue=""

@@ -99,9 +99,33 @@ export function AssessmentSummary({
     new Intl.NumberFormat(localeTag, { maximumFractionDigits: 2 }).format(value);
   const withUnit = (value: number, unit: string) => `${number(value)} ${unit}`;
   const option = (group: string, value: string) => t(`options.${group}.${value}`);
+  const clinicalOption = (group: string, value?: string) =>
+    value ? t(`clinicalHistory.options.${group}.${value}`) : notProvided;
   const classification = (group: string, value: string) =>
     t(`calculations.classifications.${group}.${value}`);
   const notProvided = t("summary.notProvided");
+  const text = (value?: string) => value?.trim() || notProvided;
+  const optionalNumber = (value: number | undefined, unit?: string) =>
+    value === undefined
+      ? notProvided
+      : unit
+        ? withUnit(value, unit)
+        : number(value);
+  const joinOptions = (
+    values: readonly string[] | undefined,
+    group: string,
+    other?: string,
+  ) => {
+    const translated = (values ?? []).map((value) =>
+      clinicalOption(group, value),
+    );
+
+    if (other?.trim()) {
+      translated.push(other.trim());
+    }
+
+    return translated.length > 0 ? translated.join(", ") : notProvided;
+  };
 
   const riskLevel = assessment.waistHeightRatio
     ? classification("waistHeight", assessment.waistHeightRatio.classification)
@@ -161,6 +185,224 @@ export function AssessmentSummary({
       value: withUnit(data.anthropometrics.heightMeters, t("units.meters")),
     },
   ];
+
+  const personal = data.personalInformation;
+  const personalHistory = data.personalHistory;
+  const familyHistory = data.familyHistory;
+  const dietaryHabits = data.dietaryHabits;
+  const psychobiological = data.psychobiological;
+
+  const personalRows = [
+    {
+      label: t("clinicalHistory.fields.firstName"),
+      value: text(personal?.firstName),
+    },
+    {
+      label: t("clinicalHistory.fields.lastName"),
+      value: text(personal?.lastName),
+    },
+    { label: t("clinicalHistory.fields.email"), value: text(personal?.email) },
+    { label: t("clinicalHistory.fields.phone"), value: text(personal?.phone) },
+    {
+      label: t("clinicalHistory.fields.country"),
+      value: text(personal?.country),
+    },
+    {
+      label: t("clinicalHistory.fields.occupation"),
+      value: text(personal?.occupation),
+    },
+    {
+      label: t("clinicalHistory.fields.identificationNumber"),
+      value: text(personal?.identificationNumber),
+    },
+    {
+      label: t("clinicalHistory.fields.birthDate"),
+      value: text(personal?.birthDate),
+    },
+    {
+      label: t("clinicalHistory.fields.consultationType"),
+      value: clinicalOption("consultationType", personal?.consultationType),
+    },
+  ];
+
+  const consultationReasonRows = [
+    {
+      label: t("clinicalHistory.fields.consultationReason"),
+      value: joinOptions(
+        personal?.consultationReasons,
+        "consultationReason",
+        personal?.otherConsultationReason,
+      ),
+    },
+  ];
+
+  const personalHistoryRows = [
+    {
+      label: t("clinicalHistory.fields.currentDiseases"),
+      value: text(personalHistory?.currentOrPreviousDiseases),
+    },
+    {
+      label: t("clinicalHistory.fields.previousDiseases"),
+      value: text(personalHistory?.previousDiseases),
+    },
+    {
+      label: t("clinicalHistory.fields.surgeriesPerformed"),
+      value: text(personalHistory?.previousSurgeries),
+    },
+    {
+      label: t("clinicalHistory.fields.currentMedications"),
+      value: text(personalHistory?.currentMedications),
+    },
+    {
+      label: t("clinicalHistory.fields.currentSupplements"),
+      value: text(personalHistory?.currentSupplements),
+    },
+    {
+      label: t("clinicalHistory.fields.hasChildren"),
+      value: personalHistory?.hasChildren
+        ? option("yesNo", personalHistory.hasChildren)
+        : notProvided,
+    },
+    {
+      label: t("clinicalHistory.fields.numberOfChildren"),
+      value: optionalNumber(personalHistory?.numberOfChildren),
+    },
+    {
+      label: t("clinicalHistory.fields.birthType"),
+      value: clinicalOption("birthType", personalHistory?.birthType),
+    },
+  ];
+
+  const familyHistoryRows = [
+    {
+      label: t("clinicalHistory.fields.fatherAlive"),
+      value: familyHistory?.fatherAlive
+        ? option("yesNo", familyHistory.fatherAlive)
+        : notProvided,
+    },
+    {
+      label: t("clinicalHistory.fields.fatherAge"),
+      value: optionalNumber(familyHistory?.fatherAge, t("units.years")),
+    },
+    {
+      label: t("clinicalHistory.fields.fatherDiseases"),
+      value: text(familyHistory?.fatherDiseases),
+    },
+    {
+      label: t("clinicalHistory.fields.motherAlive"),
+      value: familyHistory?.motherAlive
+        ? option("yesNo", familyHistory.motherAlive)
+        : notProvided,
+    },
+    {
+      label: t("clinicalHistory.fields.motherAge"),
+      value: optionalNumber(familyHistory?.motherAge, t("units.years")),
+    },
+    {
+      label: t("clinicalHistory.fields.motherDiseases"),
+      value: text(familyHistory?.motherDiseases),
+    },
+    {
+      label: t("clinicalHistory.fields.familyConditions"),
+      value: joinOptions(
+        familyHistory?.conditions,
+        "familyCondition",
+        familyHistory?.otherCondition,
+      ),
+    },
+    {
+      label: t("clinicalHistory.fields.familyObservations"),
+      value: text(familyHistory?.observations),
+    },
+  ];
+
+  const lifestyleRows = [
+    {
+      label: t("clinicalHistory.fields.averageSleepHours"),
+      value: clinicalOption(
+        "sleepHours",
+        psychobiological.averageSleepHours,
+      ),
+    },
+    {
+      label: t("clinicalHistory.fields.sleepQuality"),
+      value: clinicalOption("sleepQuality", psychobiological.sleepQuality),
+    },
+    {
+      label: t("clinicalHistory.fields.tobacco"),
+      value: clinicalOption("substanceUse", psychobiological.tobacco),
+    },
+    {
+      label: t("clinicalHistory.fields.tobaccoQuitTime"),
+      value: clinicalOption(
+        "abandonmentTime",
+        psychobiological.tobaccoQuitTime,
+      ),
+    },
+    {
+      label: t("clinicalHistory.fields.alcohol"),
+      value: clinicalOption("substanceUse", psychobiological.alcohol),
+    },
+    {
+      label: t("clinicalHistory.fields.alcoholQuitTime"),
+      value: clinicalOption(
+        "abandonmentTime",
+        psychobiological.alcoholQuitTime,
+      ),
+    },
+    {
+      label: t("clinicalHistory.fields.coffee"),
+      value: psychobiological.coffee
+        ? option("yesNo", psychobiological.coffee)
+        : notProvided,
+    },
+    {
+      label: t("fields.dailyWaterLiters"),
+      value: withUnit(psychobiological.dailyWaterLiters, t("fields.waterUnit")),
+    },
+    {
+      label: t("clinicalHistory.fields.dailyWaterGlasses"),
+      value: optionalNumber(
+        psychobiological.dailyWaterGlasses,
+        t("clinicalHistory.units.glasses"),
+      ),
+    },
+  ];
+
+  const dietaryRows = [
+    {
+      label: t("clinicalHistory.fields.foodAllergies"),
+      value: text(dietaryHabits?.foodAllergies),
+    },
+    {
+      label: t("clinicalHistory.fields.foodPreferences"),
+      value: text(dietaryHabits?.foodPreferences),
+    },
+  ];
+
+  const foodFrequencyRows = [
+    "dairy",
+    "vegetables",
+    "fruits",
+    "carbohydrates",
+    "beef",
+    "pork",
+    "poultry",
+    "fish",
+    "eggs",
+    "processedMeats",
+    "fats",
+    "sweets",
+    "softDrinks",
+  ].map((group) => ({
+    label: t(`clinicalHistory.options.foodGroup.${group}`),
+    value: clinicalOption(
+      "foodFrequency",
+      dietaryHabits?.weeklyFrequency?.[
+        group as keyof typeof dietaryHabits.weeklyFrequency
+      ],
+    ),
+  }));
 
   const anthropometricRows = [
     { label: t("calculations.bmi"), value: number(assessment.bmi.value) },
@@ -241,6 +483,31 @@ export function AssessmentSummary({
       t("professionalReport.title"),
       t("professionalReport.status"),
       t("professionalReport.preliminaryNotice"),
+      sectionText(
+        t("professionalReport.sections.personalData"),
+        personalRows,
+      ),
+      sectionText(
+        t("professionalReport.sections.consultationReasons"),
+        consultationReasonRows,
+      ),
+      sectionText(
+        t("professionalReport.sections.personalHistory"),
+        personalHistoryRows,
+      ),
+      sectionText(
+        t("professionalReport.sections.familyHistory"),
+        familyHistoryRows,
+      ),
+      sectionText(t("professionalReport.sections.lifestyle"), lifestyleRows),
+      sectionText(
+        t("professionalReport.sections.dietaryHistory"),
+        dietaryRows,
+      ),
+      sectionText(
+        t("professionalReport.sections.foodFrequency"),
+        foodFrequencyRows,
+      ),
       sectionText(t("professionalReport.sections.general"), generalRows),
       sectionText(
         t("professionalReport.sections.anthropometrics"),
@@ -304,6 +571,34 @@ export function AssessmentSummary({
         </header>
 
         <div className="mt-6 grid gap-5">
+          <ReportSection
+            title={t("professionalReport.sections.personalData")}
+            rows={personalRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.consultationReasons")}
+            rows={consultationReasonRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.personalHistory")}
+            rows={personalHistoryRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.familyHistory")}
+            rows={familyHistoryRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.lifestyle")}
+            rows={lifestyleRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.dietaryHistory")}
+            rows={dietaryRows}
+          />
+          <ReportSection
+            title={t("professionalReport.sections.foodFrequency")}
+            rows={foodFrequencyRows}
+          />
           <ReportSection
             title={t("professionalReport.sections.general")}
             rows={generalRows}
