@@ -122,6 +122,7 @@ export function createNutritionAssessmentSchema(t: Translate) {
         foodPreferences: optionalText,
         mealsAtHomeDays: optionalDays,
         mealsAwayDays: optionalDays,
+        otherFood: optionalText,
         weeklyFrequency: z.object({
           dairy: optionalFoodFrequency,
           vegetables: optionalFoodFrequency,
@@ -136,6 +137,7 @@ export function createNutritionAssessmentSchema(t: Translate) {
           fats: optionalFoodFrequency,
           sweets: optionalFoodFrequency,
           softDrinks: optionalFoodFrequency,
+          other: optionalFoodFrequency,
         }),
       })
       .optional(),

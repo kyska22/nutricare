@@ -394,14 +394,21 @@ export function AssessmentSummary({
     "fats",
     "sweets",
     "softDrinks",
+    "other",
   ].map((group) => ({
     label: t(`clinicalHistory.options.foodGroup.${group}`),
-    value: clinicalOption(
-      "foodFrequency",
-      dietaryHabits?.weeklyFrequency?.[
-        group as keyof typeof dietaryHabits.weeklyFrequency
-      ],
-    ),
+    value:
+      group === "other" && dietaryHabits?.otherFood?.trim()
+        ? `${clinicalOption(
+            "foodFrequency",
+            dietaryHabits?.weeklyFrequency?.other,
+          )} - ${dietaryHabits.otherFood.trim()}`
+        : clinicalOption(
+            "foodFrequency",
+            dietaryHabits?.weeklyFrequency?.[
+              group as keyof typeof dietaryHabits.weeklyFrequency
+            ],
+          ),
   }));
 
   const anthropometricRows = [

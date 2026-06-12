@@ -1,11 +1,20 @@
 export const translations = {
   es: {
     app: {
-      name: "NutriCare",
-      eyebrow: "Evaluación nutricional",
-      title: "Conozcamos mejor a su paciente",
+      name: "NutriJenhFit",
+      eyebrow: "Valoración Integral de Salud y Nutrición",
+      title: "Construyendo tu Plan Nutricional Personalizado",
       description:
-        "Complete la información para construir una evaluación organizada y lista para las próximas etapas del acompañamiento.",
+        "La información proporcionada es confidencial y será utilizada exclusivamente para realizar una evaluación clínico-nutricional integral.",
+      descriptionSecondary:
+        "Este proceso nos permitirá comprender mejor tus antecedentes de salud, hábitos, objetivos y necesidades individuales para diseñar una estrategia nutricional personalizada, segura y adaptada a tu realidad.",
+      privacyNotice:
+        "Tu privacidad es importante. Todos los datos recopilados serán tratados con estricta confidencialidad y utilizados únicamente con fines de valoración y seguimiento nutricional profesional.",
+      benefits: {
+        personalized: "Evaluación personalizada",
+        confidential: "Información confidencial",
+        professional: "Seguimiento profesional",
+      },
       language: "Idioma",
       progress: "4 secciones",
     },
@@ -286,6 +295,7 @@ export const translations = {
         foodPreferences: "Alimentos que evita o no consume por preferencia",
         mealsAtHomeDays: "Consumo de alimentos en casa",
         mealsAwayDays: "Consumo de alimentos en la calle",
+        otherFood: "Especifique otros alimentos",
         weeklyFoodFrequency: "Frecuencia semanal de alimentos",
       },
       placeholders: {
@@ -301,6 +311,7 @@ export const translations = {
         otherFamilyCondition: "Especifique el antecedente",
         foodAllergies: "Describa alergias o indique que no presenta...",
         foodPreferences: "Ej.: no consume cerdo, vegetariano...",
+        otherFood: "Escriba el alimento o grupo de alimentos...",
         waterGlasses: "Ej.: 8",
         zero: "0",
         zeroToSeven: "0-7",
@@ -396,6 +407,7 @@ export const translations = {
           fats: "Grasas",
           sweets: "Dulces",
           softDrinks: "Refrescos",
+          other: "Otros",
         },
       },
       units: {
@@ -481,11 +493,20 @@ export const translations = {
   },
   pt: {
     app: {
-      name: "NutriCare",
-      eyebrow: "Avaliação nutricional",
-      title: "Vamos conhecer melhor o seu paciente",
+      name: "NutriJenhFit",
+      eyebrow: "Avaliação Integral de Saúde e Nutrição",
+      title: "Construindo seu Plano Nutricional Personalizado",
       description:
-        "Preencha as informações para criar uma avaliação organizada e pronta para as próximas etapas do acompanhamento.",
+        "As informações fornecidas são confidenciais e serão utilizadas exclusivamente para realizar uma avaliação clínico-nutricional integral.",
+      descriptionSecondary:
+        "Este processo nos permitirá compreender melhor seu histórico de saúde, hábitos, objetivos e necessidades individuais para desenvolver uma estratégia nutricional personalizada, segura e adaptada à sua realidade.",
+      privacyNotice:
+        "Sua privacidade é importante. Todos os dados coletados serão tratados com estrita confidencialidade e utilizados apenas para avaliação e acompanhamento nutricional profissional.",
+      benefits: {
+        personalized: "Avaliação personalizada",
+        confidential: "Informações confidenciais",
+        professional: "Acompanhamento profissional",
+      },
       language: "Idioma",
       progress: "4 seções",
     },
@@ -766,6 +787,7 @@ export const translations = {
         foodPreferences: "Alimentos que evita ou não consome por preferência",
         mealsAtHomeDays: "Consumo de alimentos em casa",
         mealsAwayDays: "Consumo de alimentos fora de casa",
+        otherFood: "Especifique outros alimentos",
         weeklyFoodFrequency: "Frequência semanal de alimentos",
       },
       placeholders: {
@@ -781,6 +803,7 @@ export const translations = {
         otherFamilyCondition: "Especifique o antecedente",
         foodAllergies: "Descreva alergias ou informe que não apresenta...",
         foodPreferences: "Ex.: não consome carne suína, vegetariano...",
+        otherFood: "Informe o alimento ou grupo de alimentos...",
         waterGlasses: "Ex.: 8",
         zero: "0",
         zeroToSeven: "0-7",
@@ -876,6 +899,7 @@ export const translations = {
           fats: "Gorduras",
           sweets: "Doces",
           softDrinks: "Refrigerantes",
+          other: "Outros",
         },
       },
       units: {
@@ -961,11 +985,20 @@ export const translations = {
   },
   en: {
     app: {
-      name: "NutriCare",
-      eyebrow: "Nutritional assessment",
-      title: "Let’s get to know your patient",
+      name: "NutriJenhFit",
+      eyebrow: "Comprehensive Health and Nutrition Assessment",
+      title: "Building Your Personalized Nutrition Plan",
       description:
-        "Complete the information to build an organized assessment ready for the next stages of care.",
+        "The information you provide is confidential and will be used exclusively to conduct a comprehensive clinical and nutritional assessment.",
+      descriptionSecondary:
+        "This process will help us better understand your health history, habits, goals, and individual needs to design a personalized, safe nutrition strategy adapted to your reality.",
+      privacyNotice:
+        "Your privacy matters. All collected data will be treated with strict confidentiality and used only for professional nutritional assessment and follow-up.",
+      benefits: {
+        personalized: "Personalized assessment",
+        confidential: "Confidential information",
+        professional: "Professional follow-up",
+      },
       language: "Language",
       progress: "4 sections",
     },
@@ -1246,6 +1279,7 @@ export const translations = {
         foodPreferences: "Foods avoided or not consumed by preference",
         mealsAtHomeDays: "Meals eaten at home",
         mealsAwayDays: "Meals eaten away from home",
+        otherFood: "Specify other foods",
         weeklyFoodFrequency: "Weekly food frequency",
       },
       placeholders: {
@@ -1261,6 +1295,7 @@ export const translations = {
         otherFamilyCondition: "Specify the condition",
         foodAllergies: "Describe allergies or state that there are none...",
         foodPreferences: "E.g. does not eat pork, vegetarian...",
+        otherFood: "Enter the food or food group...",
         waterGlasses: "E.g. 8",
         zero: "0",
         zeroToSeven: "0-7",
@@ -1356,6 +1391,7 @@ export const translations = {
           fats: "Fats",
           sweets: "Sweets",
           softDrinks: "Soft drinks",
+          other: "Other",
         },
       },
       units: {

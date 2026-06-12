@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Resolver, useForm } from "react-hook-form";
@@ -84,6 +85,7 @@ const emptyValues = {
     foodPreferences: "",
     mealsAtHomeDays: undefined,
     mealsAwayDays: undefined,
+    otherFood: "",
     weeklyFrequency: {},
   },
   gastrointestinal: {
@@ -208,10 +210,16 @@ export function NutritionAssessmentForm() {
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-8">
             <div className="flex items-center gap-3">
               <div
-                aria-hidden="true"
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-xl font-black text-emerald-800"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white p-1.5"
               >
-                N
+                <Image
+                  src="/brand/nutrijenhfit-logo.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-full w-full object-contain"
+                />
               </div>
               <span className="text-lg font-bold">{t("app.name")}</span>
             </div>
@@ -229,21 +237,91 @@ export function NutritionAssessmentForm() {
               </select>
             </label>
           </div>
-          <div className="grid gap-6 px-5 py-9 sm:px-8 sm:py-12 md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">
-                {t("app.eyebrow")}
-              </p>
-              <h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
-                {t("app.title")}
-              </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-emerald-50/80 sm:text-lg">
-                {t("app.description")}
-              </p>
+          <div className="px-5 py-9 sm:px-8 sm:py-12">
+            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+              <div className="max-w-4xl">
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">
+                  {t("app.eyebrow")}
+                </p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
+                  {t("app.title")}
+                </h1>
+              </div>
+              <span className="w-fit shrink-0 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
+                {t("clinicalHistory.progress")}
+              </span>
             </div>
-            <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
-              {t("clinicalHistory.progress")}
-            </span>
+
+            <div className="mt-8 rounded-3xl border border-white/15 bg-white/10 p-5 shadow-inner shadow-white/5 backdrop-blur-sm sm:p-7">
+              <div className="grid gap-5 md:grid-cols-[3rem_1fr]">
+                <div
+                  aria-hidden="true"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-800 shadow-lg shadow-emerald-950/10"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-6 w-6"
+                  >
+                    <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6l-7-3Z" />
+                    <path d="M9 12h6M12 9v6" />
+                  </svg>
+                </div>
+                <div className="space-y-4 text-sm leading-6 text-emerald-50/90 sm:text-base sm:leading-7">
+                  <p className="font-semibold text-white">
+                    {t("app.description")}
+                  </p>
+                  <p>{t("app.descriptionSecondary")}</p>
+                  <p className="border-l-2 border-emerald-300/70 pl-4 text-emerald-100">
+                    {t("app.privacyNotice")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {(
+                [
+                  {
+                    key: "personalized",
+                    path: "M20.8 8.6c0 5.5-8.8 10.4-8.8 10.4S3.2 14.1 3.2 8.6A4.6 4.6 0 0 1 12 6.7a4.6 4.6 0 0 1 8.8 1.9Z",
+                  },
+                  {
+                    key: "confidential",
+                    path: "M6 10V8a6 6 0 0 1 12 0v2M5 10h14v10H5V10Zm7 4v2",
+                  },
+                  {
+                    key: "professional",
+                    path: "m5 12 4 4L19 6",
+                  },
+                ] as const
+              ).map((benefit) => (
+                <div
+                  key={benefit.key}
+                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-emerald-900/35 px-4 py-3.5 text-sm font-bold text-white"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-200 text-emerald-900"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <path d={benefit.path} />
+                    </svg>
+                  </span>
+                  {t(`app.benefits.${benefit.key}`)}
+                </div>
+              ))}
+            </div>
           </div>
         </header>
 

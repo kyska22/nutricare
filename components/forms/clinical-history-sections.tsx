@@ -7,7 +7,6 @@ import {
 import { formOptions } from "@/data/form-options";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
-import { calculateAge } from "@/lib/utils/calculate-age";
 import { FormSection } from "@/components/ui/form-section";
 import {
   InputField,
@@ -78,8 +77,6 @@ export function PersonalInformationSection({
 }: ClinicalSectionProps) {
   const { t } = useI18n();
   const sectionErrors = errors.personalInformation;
-  const birthDate = watch("personalInformation.birthDate");
-  const calculatedAge = birthDate ? calculateAge(birthDate) : null;
 
   return (
     <FormSection
@@ -146,23 +143,25 @@ export function PersonalInformationSection({
           error={sectionErrors?.birthDate}
           type="date"
         />
-        <div>
-          <span className="mb-2 block text-sm font-semibold text-emerald-950">
-            {t("clinicalHistory.fields.calculatedAge")}
-          </span>
-          <div className="rounded-xl border border-emerald-950/15 bg-emerald-50/50 px-4 py-3 text-[15px] font-semibold text-emerald-950">
-            {calculatedAge
-              ? `${calculatedAge} ${t("units.years")}`
-              : t("summary.notProvided")}
-          </div>
-        </div>
+        <InputField
+          name="anthropometrics.age"
+          label={t("clinicalHistory.fields.calculatedAge")}
+          register={register}
+          error={errors.anthropometrics?.age}
+          required
+          type="number"
+          min="1"
+          step="1"
+          placeholder={t("placeholders.age")}
+          unit={t("units.years")}
+        />
         <SelectField
           name="personalInformation.sex"
           label={t("fields.sex")}
           register={register}
-          error={sectionErrors?.sex}
+          error={sectionErrors?.sex ?? errors.anthropometrics?.sex}
+          required
           placeholder={t("placeholders.select")}
-          optional
           options={optionList(["male", "female"], "options.sex", t)}
         />
       </div>
@@ -488,6 +487,7 @@ export function FoodPreferencesSection({
 export function FoodFrequencySection({
   register,
   errors,
+  watch,
 }: ClinicalSectionProps) {
   const { t } = useI18n();
   const sectionErrors = errors.dietaryHabits;
@@ -496,6 +496,7 @@ export function FoodFrequencySection({
     "clinicalHistory.options.foodFrequency",
     t,
   );
+  const otherFrequency = watch("dietaryHabits.weeklyFrequency.other");
 
   return (
     <FormSection
@@ -522,6 +523,17 @@ export function FoodFrequencySection({
             />
           ))}
         </div>
+        {otherFrequency ? (
+          <div className="mt-6 max-w-xl">
+            <InputField
+              name="dietaryHabits.otherFood"
+              label={t("clinicalHistory.fields.otherFood")}
+              register={register}
+              error={sectionErrors?.otherFood}
+              placeholder={t("clinicalHistory.placeholders.otherFood")}
+            />
+          </div>
+        ) : null}
       </div>
     </FormSection>
   );

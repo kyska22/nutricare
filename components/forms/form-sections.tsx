@@ -380,27 +380,6 @@ export function AnthropometricsSection({ register, errors }: SectionProps) {
       description={t("sections.anthropometrics.description")}
     >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <SelectField
-          name="anthropometrics.sex"
-          label={t("fields.sex")}
-          register={register}
-          error={sectionErrors?.sex}
-          required
-          placeholder={t("placeholders.select")}
-          options={mapOptions(["male", "female"], "options.sex", t)}
-        />
-        <InputField
-          name="anthropometrics.age"
-          label={t("fields.age")}
-          register={register}
-          error={sectionErrors?.age}
-          required
-          type="number"
-          min="1"
-          step="1"
-          placeholder={t("placeholders.age")}
-          unit={t("units.years")}
-        />
         <InputField
           name="anthropometrics.weightKg"
           label={t("fields.weightKg")}

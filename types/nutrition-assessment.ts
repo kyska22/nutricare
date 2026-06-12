@@ -135,6 +135,7 @@ export const foodGroups = [
   "fats",
   "sweets",
   "softDrinks",
+  "other",
 ] as const;
 export type FoodGroup = (typeof foodGroups)[number];
 
@@ -194,6 +195,7 @@ export interface NutritionAssessmentFormValues {
     foodPreferences?: string;
     mealsAtHomeDays?: number;
     mealsAwayDays?: number;
+    otherFood?: string;
     weeklyFrequency: Partial<Record<FoodGroup, FoodFrequencyValue>>;
   };
   gastrointestinal: {
