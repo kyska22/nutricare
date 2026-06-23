@@ -16,7 +16,6 @@ import {
   substanceUseStatuses,
   stoolColors,
   stoolConsistencies,
-  waterIntakeRanges,
 } from "@/types/nutrition-assessment";
 
 type Translate = (key: string) => string;
@@ -56,13 +55,11 @@ export function createNutritionAssessmentSchema(t: Translate) {
         error: t("validation.selectRequired"),
       }),
       dailyWaterLiters: positiveNumber,
-      dailyWaterGlasses: optionalNonnegativeNumber,
       tobacco: z.enum(substanceUseStatuses).optional(),
       tobaccoQuitTime: z.enum(abandonmentTimes).optional(),
       alcohol: z.enum(substanceUseStatuses).optional(),
       alcoholQuitTime: z.enum(abandonmentTimes).optional(),
       coffee: optionalYesNo,
-      waterIntakeRange: z.enum(waterIntakeRanges).optional(),
       averageSleepHours: z.enum(sleepHourRanges).optional(),
       sleepQuality: z.enum(sleepQualities).optional(),
     }),

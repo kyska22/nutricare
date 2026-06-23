@@ -15,7 +15,6 @@ import {
   sleepHourRanges,
   sleepQualities,
   substanceUseStatuses,
-  waterIntakeRanges,
 } from "@/types/nutrition-assessment";
 
 export const formOptions = {
@@ -30,7 +29,6 @@ export const formOptions = {
   consultationReasons,
   birthTypes: ["vaginal", "cesarean", "both"] as const,
   familyHistoryConditions,
-  waterIntakeRanges,
   sleepHourRanges: [
     "lessThan4",
     "fourToFive",

@@ -3,6 +3,12 @@
 import { useMemo, useState } from "react";
 import { AnthropometricAssessment } from "@/lib/calculations";
 import { useI18n } from "@/lib/i18n/i18n-provider";
+import {
+  createAnonymousPatient,
+  createPackage,
+  isSupabaseConfigured,
+  saveEvaluation,
+} from "@/lib/supabase";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
 
 interface AssessmentSummaryProps {
@@ -92,6 +98,11 @@ export function AssessmentSummary({
   const [feedback, setFeedback] = useState<"copied" | "saved" | "pdf" | null>(
     null,
   );
+  const [databaseFeedback, setDatabaseFeedback] = useState<
+    "evaluationSaved" | "databaseNotConfigured" | "databaseError" | null
+  >(null);
+  const [isSavingEvaluation, setIsSavingEvaluation] = useState(false);
+  const [savedPatientCode, setSavedPatientCode] = useState<string | null>(null);
 
   const date = useMemo(() => new Date(createdAt), [createdAt]);
   const localeTag = locale === "es" ? "es-ES" : locale === "pt" ? "pt-BR" : "en-US";
@@ -360,13 +371,6 @@ export function AssessmentSummary({
       label: t("fields.dailyWaterLiters"),
       value: withUnit(psychobiological.dailyWaterLiters, t("fields.waterUnit")),
     },
-    {
-      label: t("clinicalHistory.fields.dailyWaterGlasses"),
-      value: optionalNumber(
-        psychobiological.dailyWaterGlasses,
-        t("clinicalHistory.units.glasses"),
-      ),
-    },
   ];
 
   const dietaryRows = [
@@ -544,6 +548,11 @@ export function AssessmentSummary({
     window.setTimeout(() => setFeedback(null), 2500);
   };
 
+  const showDatabaseFeedback = (nextFeedback: typeof databaseFeedback) => {
+    setDatabaseFeedback(nextFeedback);
+    window.setTimeout(() => setDatabaseFeedback(null), 3500);
+  };
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(buildReportText());
     showFeedback("copied");
@@ -553,6 +562,64 @@ export function AssessmentSummary({
     // Future integration point: persist the professional review in a database.
     console.log("Professional review draft:", review);
     showFeedback("saved");
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!isSupabaseConfigured()) {
+      showDatabaseFeedback("databaseNotConfigured");
+      return;
+    }
+
+    setIsSavingEvaluation(true);
+
+    try {
+      const storageKey = "nutrijenhfit-anonymous-patient-code";
+      const existingPatientCode = window.localStorage.getItem(storageKey) ?? undefined;
+      const patientResult = await createAnonymousPatient(existingPatientCode);
+
+      if (patientResult.status !== "success") {
+        console.error("Unable to create anonymous patient:", patientResult);
+        showDatabaseFeedback(
+          patientResult.status === "not_configured"
+            ? "databaseNotConfigured"
+            : "databaseError",
+        );
+        return;
+      }
+
+      if (!existingPatientCode) {
+        window.localStorage.setItem(storageKey, patientResult.data.patient_code);
+        const packageResult = await createPackage(patientResult.data.id);
+
+        if (packageResult.status === "error") {
+          console.error("Unable to create session package:", packageResult.error);
+        }
+      }
+
+      const evaluationResult = await saveEvaluation({
+        patientId: patientResult.data.id,
+        formData: data,
+        assessment,
+        evaluationDate: createdAt,
+        automaticObservations,
+        professionalReview: review,
+      });
+
+      if (evaluationResult.status !== "success") {
+        console.error("Unable to save evaluation:", evaluationResult);
+        showDatabaseFeedback(
+          evaluationResult.status === "not_configured"
+            ? "databaseNotConfigured"
+            : "databaseError",
+        );
+        return;
+      }
+
+      setSavedPatientCode(patientResult.data.patient_code);
+      showDatabaseFeedback("evaluationSaved");
+    } finally {
+      setIsSavingEvaluation(false);
+    }
   };
 
   return (
@@ -687,7 +754,19 @@ export function AssessmentSummary({
               {t(`professionalReport.feedback.${feedback}`)}
             </p>
           ) : null}
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {databaseFeedback ? (
+            <p role="status" className="mb-3 text-center text-sm font-semibold text-emerald-800">
+              {t(`professionalReport.feedback.${databaseFeedback}`)}
+            </p>
+          ) : null}
+          {savedPatientCode ? (
+            <p className="mb-3 text-center text-xs font-semibold text-slate-500">
+              {t("professionalReport.feedback.patientCode", {
+                code: savedPatientCode,
+              })}
+            </p>
+          ) : null}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             <button
               type="button"
               onClick={handleCopy}
@@ -709,6 +788,16 @@ export function AssessmentSummary({
               className="rounded-xl border border-dashed border-slate-400 px-4 py-3 font-bold text-slate-600 transition hover:bg-slate-50"
             >
               {t("professionalReport.actions.exportPdf")}
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveEvaluation}
+              disabled={isSavingEvaluation}
+              className="rounded-xl bg-orange-500 px-4 py-3 font-bold text-white shadow-lg shadow-orange-900/10 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+            >
+              {isSavingEvaluation
+                ? t("professionalReport.actions.savingEvaluation")
+                : t("professionalReport.actions.saveEvaluation")}
             </button>
             <button
               type="button"

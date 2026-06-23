@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Resolver, useForm } from "react-hook-form";
@@ -35,13 +36,11 @@ const emptyValues = {
     exerciseType: "",
     exerciseFrequency: "",
     dailyWaterLiters: "",
-    dailyWaterGlasses: undefined,
     tobacco: undefined,
     tobaccoQuitTime: undefined,
     alcohol: undefined,
     alcoholQuitTime: undefined,
     coffee: undefined,
-    waterIntakeRange: undefined,
     averageSleepHours: undefined,
     sleepQuality: undefined,
   },
@@ -247,9 +246,22 @@ export function NutritionAssessmentForm() {
                   {t("app.title")}
                 </h1>
               </div>
-              <span className="w-fit shrink-0 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
-                {t("clinicalHistory.progress")}
-              </span>
+              <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                <span className="w-fit shrink-0 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
+                  {t("clinicalHistory.progress")}
+                </span>
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href="/agenda"
+                    className="w-fit shrink-0 rounded-full bg-orange-400 px-4 py-2 text-sm font-bold text-emerald-950 transition hover:bg-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-200/40"
+                  >
+                    {t("agenda.sessionButton")}
+                  </Link>
+                  <span className="pl-1 text-xs font-semibold text-emerald-50/80">
+                    {t("agenda.packageLabel")}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="mt-8 rounded-3xl border border-white/15 bg-white/10 p-5 shadow-inner shadow-white/5 backdrop-blur-sm sm:p-7">

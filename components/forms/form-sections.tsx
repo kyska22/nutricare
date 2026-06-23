@@ -101,17 +101,6 @@ export function PsychobiologicalSection({
           placeholder={t("placeholders.water")}
           unit={t("fields.waterUnit")}
         />
-        <InputField
-          name="psychobiological.dailyWaterGlasses"
-          label={t("clinicalHistory.fields.dailyWaterGlasses")}
-          register={register}
-          error={sectionErrors?.dailyWaterGlasses}
-          type="number"
-          min="0"
-          step="1"
-          placeholder={t("clinicalHistory.placeholders.waterGlasses")}
-          unit={t("clinicalHistory.units.glasses")}
-        />
         <SelectField
           name="psychobiological.tobacco"
           label={t("clinicalHistory.fields.tobacco")}
@@ -176,19 +165,6 @@ export function PsychobiologicalSection({
           placeholder={t("placeholders.select")}
           optional
           options={mapOptions(["yes", "no"], "options.yesNo", t)}
-        />
-        <SelectField
-          name="psychobiological.waterIntakeRange"
-          label={t("clinicalHistory.fields.waterIntakeRange")}
-          register={register}
-          error={sectionErrors?.waterIntakeRange}
-          placeholder={t("placeholders.select")}
-          optional
-          options={mapOptions(
-            formOptions.waterIntakeRanges,
-            "clinicalHistory.options.waterIntake",
-            t,
-          )}
         />
         <SelectField
           name="psychobiological.averageSleepHours"

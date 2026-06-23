@@ -81,14 +81,6 @@ export const familyHistoryConditions = [
 ] as const;
 export type FamilyHistoryCondition = (typeof familyHistoryConditions)[number];
 
-export const waterIntakeRanges = [
-  "lessThan4",
-  "fourToSix",
-  "sixToEight",
-  "moreThan8",
-] as const;
-export type WaterIntakeRange = (typeof waterIntakeRanges)[number];
-
 export const sleepHourRanges = [
   "lessThan4",
   "fourToFive",
@@ -145,13 +137,11 @@ export interface NutritionAssessmentFormValues {
     exerciseType: ExerciseType;
     exerciseFrequency: ExerciseFrequency;
     dailyWaterLiters: number;
-    dailyWaterGlasses?: number;
     tobacco?: SubstanceUseStatus;
     tobaccoQuitTime?: AbandonmentTime;
     alcohol?: SubstanceUseStatus;
     alcoholQuitTime?: AbandonmentTime;
     coffee?: YesNoValue;
-    waterIntakeRange?: WaterIntakeRange;
     averageSleepHours?: SleepHourRange;
     sleepQuality?: SleepQuality;
   };
