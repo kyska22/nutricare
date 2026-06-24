@@ -211,6 +211,7 @@ export const translations = {
       sex: {
         male: "Masculino",
         female: "Femenino",
+        prefer_not_to_answer: "Prefiero no contestar",
       },
       timePeriod: {
         AM: "AM",
@@ -469,7 +470,7 @@ export const translations = {
           dairy: "Lácteos",
           vegetables: "Vegetales",
           fruits: "Frutas",
-          carbohydrates: "Cereales",
+          carbohydrates: "Carbohidratos",
           beef: "Carnes rojas",
           pork: "Cerdo",
           poultry: "Pollo",
@@ -783,6 +784,7 @@ export const translations = {
       sex: {
         male: "Masculino",
         female: "Feminino",
+        prefer_not_to_answer: "Prefiro não responder",
       },
       timePeriod: {
         AM: "AM",
@@ -1041,7 +1043,7 @@ export const translations = {
           dairy: "Laticínios",
           vegetables: "Vegetais",
           fruits: "Frutas",
-          carbohydrates: "Cereais",
+          carbohydrates: "Carbohidratos",
           beef: "Carnes vermelhas",
           pork: "Carne suína",
           poultry: "Frango",
@@ -1355,6 +1357,7 @@ export const translations = {
       sex: {
         male: "Male",
         female: "Female",
+        prefer_not_to_answer: "Prefer not to answer",
       },
       timePeriod: {
         AM: "AM",
@@ -1613,7 +1616,7 @@ export const translations = {
           dairy: "Dairy",
           vegetables: "Vegetables",
           fruits: "Fruit",
-          carbohydrates: "Cereals",
+          carbohydrates: "Carbohydrates",
           beef: "Red meat",
           pork: "Pork",
           poultry: "Chicken",

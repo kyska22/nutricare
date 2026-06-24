@@ -162,7 +162,7 @@ export function PersonalInformationSection({
           error={sectionErrors?.sex ?? errors.anthropometrics?.sex}
           required
           placeholder={t("placeholders.select")}
-          options={optionList(["male", "female"], "options.sex", t)}
+          options={optionList(["male", "female", "prefer_not_to_answer"], "options.sex", t)}
         />
       </div>
 
