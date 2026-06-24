@@ -31,12 +31,16 @@ create table if not exists public.evaluations (
   muscle_mass_kg numeric,
   resting_energy_kcal numeric,
   total_energy_kcal numeric,
+  idempotency_key text,
   raw_results jsonb,
   nutritionist_notes text,
   recommendations text,
   follow_up_plan text,
   created_at timestamptz not null default now()
 );
+
+create unique index if not exists evaluations_idempotency_key_unique
+  on public.evaluations(idempotency_key);
 
 create table if not exists public.packages (
   id uuid primary key default gen_random_uuid(),

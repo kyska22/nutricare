@@ -22,11 +22,16 @@ export const translations = {
       eyebrow: "Agenda nutricional",
       title: "Agendar consulta nutricional",
       subtitle: "Selecciona el horario disponible que mejor se adapte a ti.",
-      sessionButton: "Agendar consulta",
-      packageLabel: "Paquete: 10 sesiones",
-      infoTitle: "Confirmación profesional",
-      info:
-        "La reserva será enviada a la nutricionista y recibirás la confirmación por correo electrónico.",
+      sessionButton: "Agendar sesión",
+      serviceTitle: "Sesión nutricional online",
+      priceLabel: "Valor de la sesión",
+      durationLabel: "Duración",
+      priceFallback: "Valor informado por la nutricionista.",
+      durationFallback: "Duración informada por la nutricionista.",
+      confirmationNotice:
+        "La reserva será confirmada por correo electrónico.",
+      paymentNotice:
+        "El pago debe ser realizado según las instrucciones indicadas por la nutricionista.",
       calendarTitle: "Calendario de consultas nutricionales",
       notConfiguredTitle: "Agenda no disponible",
       notConfigured:
@@ -531,6 +536,7 @@ export const translations = {
         exportPdf: "Exportar PDF",
         saveEvaluation: "Guardar evaluación",
         savingEvaluation: "Guardando...",
+        evaluationSaved: "Evaluación guardada",
         save: "Guardar revisión",
       },
       feedback: {
@@ -588,11 +594,16 @@ export const translations = {
       eyebrow: "Agenda nutricional",
       title: "Agendar consulta nutricional",
       subtitle: "Selecione o horário disponível que melhor se adapte a você.",
-      sessionButton: "Agendar consulta",
-      packageLabel: "Pacote: 10 sessões",
-      infoTitle: "Confirmação profissional",
-      info:
-        "A reserva será enviada à nutricionista e você receberá a confirmação por e-mail.",
+      sessionButton: "Agendar sessão",
+      serviceTitle: "Sessão nutricional online",
+      priceLabel: "Valor da sessão",
+      durationLabel: "Duração",
+      priceFallback: "Valor informado pela nutricionista.",
+      durationFallback: "Duração informada pela nutricionista.",
+      confirmationNotice:
+        "A reserva será confirmada por e-mail.",
+      paymentNotice:
+        "O pagamento deve ser realizado conforme as instruções indicadas pela nutricionista.",
       calendarTitle: "Calendário de consultas nutricionais",
       notConfiguredTitle: "Agenda indisponível",
       notConfigured:
@@ -1097,6 +1108,7 @@ export const translations = {
         exportPdf: "Exportar PDF",
         saveEvaluation: "Salvar avaliação",
         savingEvaluation: "Salvando...",
+        evaluationSaved: "Avaliação salva",
         save: "Salvar revisão",
       },
       feedback: {
@@ -1154,11 +1166,16 @@ export const translations = {
       eyebrow: "Nutrition schedule",
       title: "Schedule a nutrition consultation",
       subtitle: "Select the available time that works best for you.",
-      sessionButton: "Schedule consultation",
-      packageLabel: "Package: 10 sessions",
-      infoTitle: "Professional confirmation",
-      info:
-        "The booking will be sent to the nutritionist and you will receive confirmation by email.",
+      sessionButton: "Schedule session",
+      serviceTitle: "Online nutrition session",
+      priceLabel: "Session price",
+      durationLabel: "Duration",
+      priceFallback: "Price provided by the nutritionist.",
+      durationFallback: "Duration provided by the nutritionist.",
+      confirmationNotice:
+        "The booking will be confirmed by email.",
+      paymentNotice:
+        "Payment must be made according to the instructions provided by the nutritionist.",
       calendarTitle: "Nutrition consultation calendar",
       notConfiguredTitle: "Schedule unavailable",
       notConfigured:
@@ -1663,6 +1680,7 @@ export const translations = {
         exportPdf: "Export PDF",
         saveEvaluation: "Save evaluation",
         savingEvaluation: "Saving...",
+        evaluationSaved: "Evaluation saved",
         save: "Save review",
       },
       feedback: {

@@ -257,9 +257,6 @@ export function NutritionAssessmentForm() {
                   >
                     {t("agenda.sessionButton")}
                   </Link>
-                  <span className="pl-1 text-xs font-semibold text-emerald-50/80">
-                    {t("agenda.packageLabel")}
-                  </span>
                 </div>
               </div>
             </div>

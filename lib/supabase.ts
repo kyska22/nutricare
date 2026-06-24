@@ -67,6 +67,7 @@ export interface ProfessionalReviewInput {
 
 interface SaveEvaluationInput {
   patientId: string;
+  idempotencyKey: string;
   formData: NutritionAssessmentFormValues;
   assessment: AnthropometricAssessment;
   evaluationDate?: string;
@@ -384,6 +385,7 @@ export async function createAnonymousPatient(patientCode = generatePatientCode()
 
 export async function saveEvaluation({
   patientId,
+  idempotencyKey,
   formData,
   assessment,
   evaluationDate,
@@ -409,6 +411,7 @@ export async function saveEvaluation({
       .from("evaluations")
       .insert({
         patient_id: patientId,
+        idempotency_key: idempotencyKey,
         evaluation_date: evaluationDate ?? new Date().toISOString(),
         consultation_type: formData.personalInformation?.consultationType ?? null,
         sex: anthropometrics.sex,
@@ -438,6 +441,21 @@ export async function saveEvaluation({
       .single();
 
     if (error) {
+      if ((error as { code?: string }).code === "23505") {
+        const { data: existingEvaluation, error: existingError } = await supabase
+          .from("evaluations")
+          .select("id, patient_id")
+          .eq("idempotency_key", idempotencyKey)
+          .single();
+
+        if (!existingError && existingEvaluation) {
+          return {
+            status: "success",
+            data: existingEvaluation,
+          } satisfies SupabaseResult<EvaluationRecord>;
+        }
+      }
+
       return { status: "error", error: error.message } satisfies SupabaseResult<EvaluationRecord>;
     }
 

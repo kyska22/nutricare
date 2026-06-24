@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnthropometricAssessment } from "@/lib/calculations";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import {
@@ -103,6 +103,8 @@ export function AssessmentSummary({
   >(null);
   const [isSavingEvaluation, setIsSavingEvaluation] = useState(false);
   const [savedPatientCode, setSavedPatientCode] = useState<string | null>(null);
+  const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   const date = useMemo(() => new Date(createdAt), [createdAt]);
   const localeTag = locale === "es" ? "es-ES" : locale === "pt" ? "pt-BR" : "en-US";
@@ -565,6 +567,10 @@ export function AssessmentSummary({
   };
 
   const handleSaveEvaluation = async () => {
+    if (isSavingEvaluation || savedEvaluationId) {
+      return;
+    }
+
     if (!isSupabaseConfigured()) {
       showDatabaseFeedback("databaseNotConfigured");
       return;
@@ -573,6 +579,13 @@ export function AssessmentSummary({
     setIsSavingEvaluation(true);
 
     try {
+      if (!idempotencyKeyRef.current) {
+        idempotencyKeyRef.current =
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${createdAt}-${Math.random().toString(36).slice(2)}`;
+      }
+
       const storageKey = "nutrijenhfit-anonymous-patient-code";
       const existingPatientCode = window.localStorage.getItem(storageKey) ?? undefined;
       const patientResult = await createAnonymousPatient(existingPatientCode);
@@ -598,6 +611,7 @@ export function AssessmentSummary({
 
       const evaluationResult = await saveEvaluation({
         patientId: patientResult.data.id,
+        idempotencyKey: idempotencyKeyRef.current,
         formData: data,
         assessment,
         evaluationDate: createdAt,
@@ -616,6 +630,7 @@ export function AssessmentSummary({
       }
 
       setSavedPatientCode(patientResult.data.patient_code);
+      setSavedEvaluationId(evaluationResult.data.id);
       showDatabaseFeedback("evaluationSaved");
     } finally {
       setIsSavingEvaluation(false);
@@ -792,12 +807,14 @@ export function AssessmentSummary({
             <button
               type="button"
               onClick={handleSaveEvaluation}
-              disabled={isSavingEvaluation}
+              disabled={isSavingEvaluation || Boolean(savedEvaluationId)}
               className="rounded-xl bg-orange-500 px-4 py-3 font-bold text-white shadow-lg shadow-orange-900/10 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
             >
-              {isSavingEvaluation
-                ? t("professionalReport.actions.savingEvaluation")
-                : t("professionalReport.actions.saveEvaluation")}
+              {savedEvaluationId
+                ? t("professionalReport.actions.evaluationSaved")
+                : isSavingEvaluation
+                  ? t("professionalReport.actions.savingEvaluation")
+                  : t("professionalReport.actions.saveEvaluation")}
             </button>
             <button
               type="button"

@@ -27,6 +27,15 @@ function getCalLinks(configuredLink: string | undefined) {
 
 export default function AgendaRoute() {
   const calLinks = getCalLinks(process.env.NEXT_PUBLIC_CAL_LINK);
+  const sessionPrice = process.env.NEXT_PUBLIC_SESSION_PRICE?.trim() || null;
+  const sessionDuration =
+    process.env.NEXT_PUBLIC_SESSION_DURATION?.trim() || null;
 
-  return <AgendaPage calLinks={calLinks} />;
+  return (
+    <AgendaPage
+      calLinks={calLinks}
+      sessionPrice={sessionPrice}
+      sessionDuration={sessionDuration}
+    />
+  );
 }

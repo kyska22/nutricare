@@ -10,9 +10,15 @@ interface AgendaPageProps {
     external: string;
     embed: string;
   } | null;
+  sessionPrice: string | null;
+  sessionDuration: string | null;
 }
 
-export function AgendaPage({ calLinks }: AgendaPageProps) {
+export function AgendaPage({
+  calLinks,
+  sessionPrice,
+  sessionDuration,
+}: AgendaPageProps) {
   const { locale, setLocale, t } = useI18n();
 
   return (
@@ -62,34 +68,35 @@ export function AgendaPage({ calLinks }: AgendaPageProps) {
                   {t("agenda.subtitle")}
                 </p>
               </div>
-              <span className="w-fit shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-emerald-50">
-                {t("agenda.packageLabel")}
-              </span>
             </div>
           </div>
         </header>
 
-        <section className="mt-6 rounded-3xl border border-orange-200 bg-orange-50 p-5 shadow-sm sm:p-6">
-          <div className="flex gap-4">
-            <span
-              aria-hidden="true"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-400 text-emerald-950"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-6 w-6"
-              >
-                <path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />
-                <path d="m9 15 2 2 4-5" />
-              </svg>
-            </span>
-            <div>
-              <h2 className="font-bold text-emerald-950">{t("agenda.infoTitle")}</h2>
-              <p className="mt-1 leading-7 text-emerald-900/80">{t("agenda.info")}</p>
+        <section className="mt-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-lg shadow-emerald-950/5 sm:p-6">
+          <h2 className="text-xl font-bold text-emerald-950">
+            {t("agenda.serviceTitle")}
+          </h2>
+          <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl bg-emerald-50 p-4">
+              <dt className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+                {t("agenda.priceLabel")}
+              </dt>
+              <dd className="mt-1 text-lg font-bold text-emerald-950">
+                {sessionPrice ?? t("agenda.priceFallback")}
+              </dd>
             </div>
+            <div className="rounded-2xl bg-orange-50 p-4">
+              <dt className="text-xs font-bold uppercase tracking-wide text-orange-800">
+                {t("agenda.durationLabel")}
+              </dt>
+              <dd className="mt-1 text-lg font-bold text-emerald-950">
+                {sessionDuration ?? t("agenda.durationFallback")}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-5 space-y-2 border-t border-emerald-950/10 pt-5 text-sm leading-6 text-emerald-900/80">
+            <p>{t("agenda.confirmationNotice")}</p>
+            <p>{t("agenda.paymentNotice")}</p>
           </div>
         </section>
 
