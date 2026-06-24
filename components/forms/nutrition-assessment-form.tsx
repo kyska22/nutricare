@@ -144,6 +144,7 @@ export function NutritionAssessmentForm() {
 
   const birthDate = watch("personalInformation.birthDate");
   const personalSex = watch("personalInformation.sex");
+  const consultationType = watch("personalInformation.consultationType");
 
   useEffect(() => {
     if (!birthDate) {
@@ -252,7 +253,11 @@ export function NutritionAssessmentForm() {
                 </span>
                 <div className="flex flex-col gap-1">
                   <Link
-                    href="/agenda"
+                    href={
+                      consultationType
+                        ? `/agenda?consultationType=${consultationType}`
+                        : "/agenda"
+                    }
                     className="w-fit shrink-0 rounded-full bg-orange-400 px-4 py-2 text-sm font-bold text-emerald-950 transition hover:bg-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-200/40"
                   >
                     {t("agenda.sessionButton")}

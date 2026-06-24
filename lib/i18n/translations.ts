@@ -28,6 +28,11 @@ export const translations = {
       durationLabel: "Duración",
       priceFallback: "Valor informado por la nutricionista.",
       durationFallback: "Duración informada por la nutricionista.",
+      followUpDuration: "30 minutos",
+      consultationTypeLabel: "Tipo de consulta",
+      selectConsultationPlaceholder: "Seleccione una opción",
+      selectConsultationToContinue:
+        "Seleccione el tipo de consulta para mostrar los horarios disponibles.",
       confirmationNotice:
         "La reserva será confirmada por correo electrónico.",
       paymentNotice:
@@ -601,6 +606,11 @@ export const translations = {
       durationLabel: "Duração",
       priceFallback: "Valor informado pela nutricionista.",
       durationFallback: "Duração informada pela nutricionista.",
+      followUpDuration: "30 minutos",
+      consultationTypeLabel: "Tipo de consulta",
+      selectConsultationPlaceholder: "Selecione uma opção",
+      selectConsultationToContinue:
+        "Selecione o tipo de consulta para mostrar os horários disponíveis.",
       confirmationNotice:
         "A reserva será confirmada por e-mail.",
       paymentNotice:
@@ -1174,6 +1184,11 @@ export const translations = {
       durationLabel: "Duration",
       priceFallback: "Price provided by the nutritionist.",
       durationFallback: "Duration provided by the nutritionist.",
+      followUpDuration: "30 minutes",
+      consultationTypeLabel: "Consultation type",
+      selectConsultationPlaceholder: "Select an option",
+      selectConsultationToContinue:
+        "Select the consultation type to show available times.",
       confirmationNotice:
         "The booking will be confirmed by email.",
       paymentNotice:

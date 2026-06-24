@@ -2,24 +2,42 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import { Locale } from "@/lib/i18n/translations";
 
-interface AgendaPageProps {
+type ConsultationType = "firstTime" | "followUp";
+
+interface CalLinks {
   calLinks: {
     external: string;
     embed: string;
   } | null;
+}
+
+interface ConsultationConfiguration extends CalLinks {
   sessionPrice: string | null;
   sessionDuration: string | null;
 }
 
+interface AgendaPageProps {
+  initialConsultationType: ConsultationType | null;
+  consultationConfigurations: Record<ConsultationType, ConsultationConfiguration>;
+}
+
 export function AgendaPage({
-  calLinks,
-  sessionPrice,
-  sessionDuration,
+  initialConsultationType,
+  consultationConfigurations,
 }: AgendaPageProps) {
   const { locale, setLocale, t } = useI18n();
+  const [selectedConsultationType, setSelectedConsultationType] =
+    useState<ConsultationType | null>(initialConsultationType);
+  const configuration = selectedConsultationType
+    ? consultationConfigurations[selectedConsultationType]
+    : null;
+  const calLinks = configuration?.calLinks ?? null;
+  const sessionPrice = configuration?.sessionPrice ?? null;
+  const sessionDuration = configuration?.sessionDuration ?? null;
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
@@ -76,6 +94,35 @@ export function AgendaPage({
           <h2 className="text-xl font-bold text-emerald-950">
             {t("agenda.serviceTitle")}
           </h2>
+          {!initialConsultationType ? (
+            <label className="mt-5 block">
+              <span className="text-sm font-bold text-emerald-900">
+                {t("agenda.consultationTypeLabel")}
+              </span>
+              <select
+                value={selectedConsultationType ?? ""}
+                onChange={(event) =>
+                  setSelectedConsultationType(
+                    event.target.value === "firstTime" ||
+                      event.target.value === "followUp"
+                      ? event.target.value
+                      : null,
+                  )
+                }
+                className="mt-2 min-h-12 w-full rounded-xl border border-emerald-950/15 bg-white px-4 text-emerald-950 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 sm:max-w-sm"
+              >
+                <option value="">
+                  {t("agenda.selectConsultationPlaceholder")}
+                </option>
+                <option value="firstTime">
+                  {t("clinicalHistory.options.consultationType.firstTime")}
+                </option>
+                <option value="followUp">
+                  {t("clinicalHistory.options.consultationType.followUp")}
+                </option>
+              </select>
+            </label>
+          ) : null}
           <dl className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl bg-emerald-50 p-4">
               <dt className="text-xs font-bold uppercase tracking-wide text-emerald-700">
@@ -90,7 +137,10 @@ export function AgendaPage({
                 {t("agenda.durationLabel")}
               </dt>
               <dd className="mt-1 text-lg font-bold text-emerald-950">
-                {sessionDuration ?? t("agenda.durationFallback")}
+                {sessionDuration ??
+                  (selectedConsultationType === "followUp"
+                    ? t("agenda.followUpDuration")
+                    : t("agenda.durationFallback"))}
               </dd>
             </div>
           </dl>
@@ -100,15 +150,46 @@ export function AgendaPage({
           </div>
         </section>
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-xl shadow-emerald-950/5">
-          {calLinks ? (
-            <iframe
-              src={calLinks.embed}
-              title={t("agenda.calendarTitle")}
-              loading="lazy"
-              className="h-[720px] w-full border-0 sm:h-[800px]"
-              allow="camera; microphone; fullscreen; payment"
-            />
+        <section className="mt-6 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-xl shadow-emerald-950/10">
+          {!selectedConsultationType ? (
+            <div className="flex min-h-96 items-center justify-center p-6 text-center sm:p-10">
+              <p className="max-w-md font-semibold leading-7 text-slate-600">
+                {t("agenda.selectConsultationToContinue")}
+              </p>
+            </div>
+          ) : calLinks ? (
+            <div className="bg-gradient-to-br from-emerald-50 via-white to-orange-50 p-2 sm:p-3">
+              <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-inner shadow-emerald-950/5">
+                <div className="flex items-center gap-3 border-b border-emerald-100 bg-white px-4 py-3 sm:px-5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-800 text-white"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                    >
+                      <rect x="3" y="5" width="18" height="16" rx="2" />
+                      <path d="M8 3v4M16 3v4M3 10h18" />
+                    </svg>
+                  </span>
+                  <p className="text-sm font-bold text-emerald-950">
+                    {t("agenda.calendarTitle")}
+                  </p>
+                  <span className="ml-auto h-2.5 w-2.5 rounded-full bg-orange-400" />
+                </div>
+                <iframe
+                  src={calLinks.embed}
+                  title={t("agenda.calendarTitle")}
+                  loading="lazy"
+                  className="h-[720px] w-full border-0 bg-white sm:h-[800px]"
+                  allow="camera; microphone; fullscreen; payment"
+                />
+              </div>
+            </div>
           ) : (
             <div className="flex min-h-96 items-center justify-center p-6 text-center sm:p-10">
               <div className="max-w-xl">
