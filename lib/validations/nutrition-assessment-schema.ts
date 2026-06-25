@@ -17,14 +17,18 @@ import {
   stoolColors,
   stoolConsistencies,
 } from "@/types/nutrition-assessment";
+import { normalizeFlexibleTimeInput } from "@/lib/utils/time";
 
 type Translate = (key: string) => string;
 
-const valid12HourTime = /^(0?[1-9]|1[0-2]):[0-5]\d$/;
+const validTime = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function createNutritionAssessmentSchema(t: Translate) {
   const requiredText = z.string().trim().min(1, t("validation.required"));
-  const timeValue = z.string();
+  const timeValue = z.string().transform((value) => {
+    const normalized = normalizeFlexibleTimeInput(value);
+    return normalized ?? value.trim();
+  });
   const timePeriod = z.union([z.literal("AM"), z.literal("PM"), z.literal("")]);
   const positiveNumber = z
     .number({ error: t("validation.invalidNumber") })
@@ -190,7 +194,7 @@ export function createNutritionAssessmentSchema(t: Translate) {
                 ? t("validation.timeRequiredWithPeriod")
                 : t("validation.required"),
             });
-          } else if (!valid12HourTime.test(time)) {
+          } else if (!validTime.test(time)) {
             context.addIssue({
               code: "custom",
               path: [timeKey],

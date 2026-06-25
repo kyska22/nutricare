@@ -4,6 +4,7 @@ import {
   Path,
   UseFormRegister,
 } from "react-hook-form";
+import { normalizeFlexibleTimeInput } from "@/lib/utils/time";
 
 interface BaseControlProps<T extends FieldValues> {
   name: Path<T>;
@@ -202,7 +203,21 @@ export function TimeWithPeriodField<T extends FieldValues>({
       <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
         <div>
           <input
-            {...register(timeName)}
+            {...register(timeName, {
+              setValueAs: (value) => {
+                const normalized = normalizeFlexibleTimeInput(String(value ?? ""));
+                return normalized ?? value;
+              },
+              onBlur: (event) => {
+                const normalized = normalizeFlexibleTimeInput(
+                  event.currentTarget.value,
+                );
+
+                if (normalized !== null) {
+                  event.currentTarget.value = normalized;
+                }
+              },
+            })}
             type="text"
             inputMode="numeric"
             autoComplete="off"

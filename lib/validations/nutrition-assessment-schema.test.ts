@@ -74,4 +74,41 @@ describe("nutrition assessment schema compatibility", () => {
     expect(result.familyHistory?.conditions).toContain("hypertension");
     expect(result.dietaryHabits?.weeklyFrequency.vegetables).toBe("daily");
   });
+
+  it("normalizes flexible 24-hour recall times to HH:mm", () => {
+    const result = createNutritionAssessmentSchema(t).parse({
+      ...existingAssessment,
+      recall24Hours: {
+        breakfast: "Breakfast",
+        breakfastTime: "830",
+        breakfastPeriod: "AM",
+        lunch: "Lunch",
+        lunchTime: "0830",
+        lunchPeriod: "AM",
+        dinner: "Dinner",
+        dinnerTime: "8:30",
+        dinnerPeriod: "PM",
+        snack: "Snack",
+        snackTime: "14",
+        snackPeriod: "PM",
+      },
+    });
+
+    expect(result.recall24Hours.breakfastTime).toBe("08:30");
+    expect(result.recall24Hours.lunchTime).toBe("08:30");
+    expect(result.recall24Hours.dinnerTime).toBe("08:30");
+    expect(result.recall24Hours.snackTime).toBe("14:00");
+  });
+
+  it("rejects invalid 24-hour recall times", () => {
+    const result = createNutritionAssessmentSchema(t).safeParse({
+      ...existingAssessment,
+      recall24Hours: {
+        ...existingAssessment.recall24Hours,
+        breakfastTime: "2460",
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
