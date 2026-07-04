@@ -1,3 +1,4 @@
+import { createBrowserClient } from "@supabase/ssr";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { AnthropometricAssessment } from "@/lib/calculations";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
@@ -25,6 +26,53 @@ interface PackageRecord {
 interface EvaluationRecord {
   id: string;
   patient_id: string;
+  nutritionist_id?: string | null;
+}
+
+interface NutritionistRecord {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  professional_registration: string | null;
+}
+
+export interface NutritionistSettings {
+  id: string;
+  nutritionistId: string;
+  clinicName: string;
+  professionalName: string;
+  professionalRegistration: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  country: string;
+  city: string;
+  logoUrl: string;
+  firstConsultationPrice: string;
+  followupPrice: string;
+  firstConsultationDuration: string;
+  followupDuration: string;
+  currency: string;
+  firstConsultationCalLink: string;
+  followupCalLink: string;
+  emailSignature: string;
+  reportFooter: string;
+  patientFinalText: string;
+}
+
+export type NutritionistSettingsInput = Omit<
+  NutritionistSettings,
+  "id" | "nutritionistId"
+>;
+
+export interface PublicAgendaSettings {
+  firstConsultationPrice: string | null;
+  followupPrice: string | null;
+  firstConsultationDuration: string | null;
+  followupDuration: string | null;
+  firstConsultationCalLink: string | null;
+  followupCalLink: string | null;
 }
 
 export interface EvaluationListItem {
@@ -87,6 +135,7 @@ interface UpdateEvaluationReviewInput extends ProfessionalReviewInput {
 }
 
 let supabaseClient: SupabaseClient | null | undefined;
+let supabaseBrowserClient: SupabaseClient | null | undefined;
 
 export function isSupabaseConfigured() {
   return Boolean(
@@ -98,6 +147,17 @@ export function isSupabaseConfigured() {
 function getSupabaseClient() {
   if (!isSupabaseConfigured()) {
     return null;
+  }
+
+  if (typeof window !== "undefined") {
+    if (supabaseBrowserClient === undefined) {
+      supabaseBrowserClient = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+      );
+    }
+
+    return supabaseBrowserClient;
   }
 
   if (supabaseClient === undefined) {
@@ -114,6 +174,72 @@ function getSupabaseClient() {
   }
 
   return supabaseClient;
+}
+
+async function getCurrentNutritionist(
+  supabase: SupabaseClient,
+): Promise<SupabaseResult<NutritionistRecord>> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    return { status: "error", error: userError.message };
+  }
+
+  if (!user) {
+    return {
+      status: "error",
+      error: "Authentication is required to access nutritionist data.",
+    };
+  }
+
+  const { data: existingNutritionist, error: lookupError } = await supabase
+    .from("nutritionists")
+    .select("id, user_id, full_name, email, professional_registration")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (lookupError) {
+    return { status: "error", error: lookupError.message };
+  }
+
+  if (existingNutritionist) {
+    return {
+      status: "success",
+      data: existingNutritionist as NutritionistRecord,
+    };
+  }
+
+  const userMetadata = user.user_metadata as
+    | { full_name?: unknown; name?: unknown }
+    | undefined;
+  const fullName =
+    typeof userMetadata?.full_name === "string"
+      ? userMetadata.full_name
+      : typeof userMetadata?.name === "string"
+        ? userMetadata.name
+        : null;
+
+  const { data: createdNutritionist, error: insertError } = await supabase
+    .from("nutritionists")
+    .insert({
+      user_id: user.id,
+      full_name: fullName,
+      email: user.email ?? null,
+    })
+    .select("id, user_id, full_name, email, professional_registration")
+    .single();
+
+  if (insertError) {
+    return { status: "error", error: insertError.message };
+  }
+
+  return {
+    status: "success",
+    data: createdNutritionist as NutritionistRecord,
+  };
 }
 
 function toErrorMessage(error: unknown) {
@@ -141,6 +267,243 @@ function nullableNumber(value: unknown) {
 
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function nullableText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function mapNutritionistSettings(
+  row: Record<string, unknown>,
+): NutritionistSettings {
+  return {
+    id: String(row.id),
+    nutritionistId: String(row.nutritionist_id),
+    clinicName: textValue(row.clinic_name),
+    professionalName: textValue(row.professional_name),
+    professionalRegistration: textValue(row.professional_registration),
+    email: textValue(row.email),
+    phone: textValue(row.phone),
+    whatsapp: textValue(row.whatsapp),
+    country: textValue(row.country),
+    city: textValue(row.city),
+    logoUrl: textValue(row.logo_url),
+    firstConsultationPrice: textValue(row.first_consultation_price),
+    followupPrice: textValue(row.followup_price),
+    firstConsultationDuration: textValue(row.first_consultation_duration),
+    followupDuration: textValue(row.followup_duration),
+    currency: textValue(row.currency),
+    firstConsultationCalLink: textValue(row.first_consultation_cal_link),
+    followupCalLink: textValue(row.followup_cal_link),
+    emailSignature: textValue(row.email_signature),
+    reportFooter: textValue(row.report_footer),
+    patientFinalText: textValue(row.patient_final_text),
+  };
+}
+
+function mapNutritionistSettingsInput(input: NutritionistSettingsInput) {
+  return {
+    clinic_name: input.clinicName.trim() || null,
+    professional_name: input.professionalName.trim() || null,
+    professional_registration: input.professionalRegistration.trim() || null,
+    email: input.email.trim() || null,
+    phone: input.phone.trim() || null,
+    whatsapp: input.whatsapp.trim() || null,
+    country: input.country.trim() || null,
+    city: input.city.trim() || null,
+    logo_url: input.logoUrl.trim() || null,
+    first_consultation_price: input.firstConsultationPrice.trim() || null,
+    followup_price: input.followupPrice.trim() || null,
+    first_consultation_duration: input.firstConsultationDuration.trim() || null,
+    followup_duration: input.followupDuration.trim() || null,
+    currency: input.currency.trim() || null,
+    first_consultation_cal_link: input.firstConsultationCalLink.trim() || null,
+    followup_cal_link: input.followupCalLink.trim() || null,
+    email_signature: input.emailSignature.trim() || null,
+    report_footer: input.reportFooter.trim() || null,
+    patient_final_text: input.patientFinalText.trim() || null,
+  };
+}
+
+function buildDefaultSettings(
+  nutritionist: NutritionistRecord,
+): NutritionistSettingsInput {
+  return {
+    clinicName: "NutriJenhFit",
+    professionalName: nutritionist.full_name ?? "",
+    professionalRegistration: nutritionist.professional_registration ?? "",
+    email: nutritionist.email ?? "",
+    phone: "",
+    whatsapp: "",
+    country: "",
+    city: "",
+    logoUrl: "",
+    firstConsultationPrice:
+      process.env.NEXT_PUBLIC_FIRST_TIME_PRICE?.trim() ||
+      process.env.NEXT_PUBLIC_SESSION_PRICE?.trim() ||
+      "",
+    followupPrice: process.env.NEXT_PUBLIC_FOLLOW_UP_PRICE?.trim() || "",
+    firstConsultationDuration:
+      process.env.NEXT_PUBLIC_SESSION_DURATION?.trim() || "45 minutos",
+    followupDuration: "30 minutos",
+    currency: "EUR",
+    firstConsultationCalLink:
+      process.env.NEXT_PUBLIC_CAL_FIRST_TIME_LINK?.trim() ||
+      process.env.NEXT_PUBLIC_CAL_LINK?.trim() ||
+      "",
+    followupCalLink:
+      process.env.NEXT_PUBLIC_CAL_FOLLOW_UP_LINK?.trim() || "",
+    emailSignature: "",
+    reportFooter: "",
+    patientFinalText: "",
+  };
+}
+
+export async function getNutritionistSettings(): Promise<
+  SupabaseResult<NutritionistSettings>
+> {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return { status: "not_configured" };
+  }
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
+    const nutritionist = nutritionistResult.data;
+    const { data: existingSettings, error: lookupError } = await supabase
+      .from("nutritionist_settings")
+      .select("*")
+      .eq("nutritionist_id", nutritionist.id)
+      .maybeSingle();
+
+    if (lookupError) {
+      return { status: "error", error: lookupError.message };
+    }
+
+    if (existingSettings) {
+      return {
+        status: "success",
+        data: mapNutritionistSettings(existingSettings as Record<string, unknown>),
+      };
+    }
+
+    const defaults = buildDefaultSettings(nutritionist);
+    const { data: createdSettings, error: insertError } = await supabase
+      .from("nutritionist_settings")
+      .insert({
+        nutritionist_id: nutritionist.id,
+        ...mapNutritionistSettingsInput(defaults),
+      })
+      .select("*")
+      .single();
+
+    if (insertError) {
+      return { status: "error", error: insertError.message };
+    }
+
+    return {
+      status: "success",
+      data: mapNutritionistSettings(createdSettings as Record<string, unknown>),
+    };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function updateNutritionistSettings(
+  input: NutritionistSettingsInput,
+): Promise<SupabaseResult<NutritionistSettings>> {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return { status: "not_configured" };
+  }
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
+    const { data, error } = await supabase
+      .from("nutritionist_settings")
+      .upsert(
+        {
+          nutritionist_id: nutritionistResult.data.id,
+          ...mapNutritionistSettingsInput(input),
+        },
+        { onConflict: "nutritionist_id" },
+      )
+      .select("*")
+      .single();
+
+    if (error) {
+      return { status: "error", error: error.message };
+    }
+
+    return {
+      status: "success",
+      data: mapNutritionistSettings(data as Record<string, unknown>),
+    };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function getPublicAgendaSettings(): Promise<
+  SupabaseResult<PublicAgendaSettings | null>
+> {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return { status: "not_configured" };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("nutritionist_settings")
+      .select(
+        "first_consultation_price, followup_price, first_consultation_duration, followup_duration, first_consultation_cal_link, followup_cal_link",
+      )
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      return { status: "error", error: error.message };
+    }
+
+    if (!data) {
+      return { status: "success", data: null };
+    }
+
+    const row = data as Record<string, unknown>;
+
+    return {
+      status: "success",
+      data: {
+        firstConsultationPrice: nullableText(row.first_consultation_price),
+        followupPrice: nullableText(row.followup_price),
+        firstConsultationDuration: nullableText(row.first_consultation_duration),
+        followupDuration: nullableText(row.followup_duration),
+        firstConsultationCalLink: nullableText(row.first_consultation_cal_link),
+        followupCalLink: nullableText(row.followup_cal_link),
+      },
+    };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
 }
 
 function mapEvaluationListItem(row: Record<string, unknown>): EvaluationListItem {
@@ -173,11 +536,18 @@ export async function getEvaluations(): Promise<
   }
 
   try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
     const { data, error } = await supabase
       .from("evaluations")
       .select(
         "id, evaluation_date, created_at, consultation_type, age, sex, weight_kg, bmi, bmi_classification, risk_level, anonymous_patients(patient_code)",
       )
+      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .order("evaluation_date", { ascending: false });
 
     if (error) {
@@ -205,10 +575,17 @@ export async function getEvaluationById(
   }
 
   try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
     const { data, error } = await supabase
       .from("evaluations")
       .select("*, anonymous_patients(patient_code)")
       .eq("id", evaluationId)
+      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .single();
 
     if (error) {
@@ -273,15 +650,23 @@ export async function updateEvaluationReview(
   };
 
   try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
     const { data, error } = await supabase
       .from("evaluations")
       .update({
+        nutritionist_id: nutritionistResult.data.id,
         nutritionist_notes: review.nutritionistObservations.trim() || null,
         recommendations: review.recommendations.trim() || null,
         follow_up_plan: review.followUpPlan.trim() || null,
         raw_results: rawResults,
       })
       .eq("id", evaluationId)
+      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .select("id")
       .single();
 
@@ -407,10 +792,17 @@ export async function saveEvaluation({
   );
 
   try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+
+    if (nutritionistResult.status !== "success") {
+      return nutritionistResult;
+    }
+
     const { data, error } = await supabase
       .from("evaluations")
       .insert({
         patient_id: patientId,
+        nutritionist_id: nutritionistResult.data.id,
         idempotency_key: idempotencyKey,
         evaluation_date: evaluationDate ?? new Date().toISOString(),
         consultation_type: formData.personalInformation?.consultationType ?? null,
@@ -446,6 +838,7 @@ export async function saveEvaluation({
           .from("evaluations")
           .select("id, patient_id")
           .eq("idempotency_key", idempotencyKey)
+          .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
           .single();
 
         if (!existingError && existingEvaluation) {

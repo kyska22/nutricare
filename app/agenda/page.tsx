@@ -1,4 +1,5 @@
 import { AgendaPage } from "@/components/agenda/agenda-page";
+import { getPublicAgendaSettings } from "@/lib/supabase";
 
 type ConsultationType = "firstTime" | "followUp";
 
@@ -38,9 +39,15 @@ function getConsultationType(value: string | undefined): ConsultationType | null
 export default async function AgendaRoute({ searchParams }: AgendaRouteProps) {
   const { consultationType } = await searchParams;
   const initialConsultationType = getConsultationType(consultationType);
+  const settingsResult = await getPublicAgendaSettings();
+  const settings =
+    settingsResult.status === "success" ? settingsResult.data : null;
   const firstTimeLink =
+    settings?.firstConsultationCalLink ??
     process.env.NEXT_PUBLIC_CAL_FIRST_TIME_LINK ??
     process.env.NEXT_PUBLIC_CAL_LINK;
+  const followUpLink =
+    settings?.followupCalLink ?? process.env.NEXT_PUBLIC_CAL_FOLLOW_UP_LINK;
 
   return (
     <AgendaPage
@@ -49,16 +56,21 @@ export default async function AgendaRoute({ searchParams }: AgendaRouteProps) {
         firstTime: {
           calLinks: getCalLinks(firstTimeLink),
           sessionPrice:
+            settings?.firstConsultationPrice ||
             process.env.NEXT_PUBLIC_FIRST_TIME_PRICE?.trim() ||
             process.env.NEXT_PUBLIC_SESSION_PRICE?.trim() ||
             null,
           sessionDuration:
+            settings?.firstConsultationDuration ||
             process.env.NEXT_PUBLIC_SESSION_DURATION?.trim() || null,
         },
         followUp: {
-          calLinks: getCalLinks(process.env.NEXT_PUBLIC_CAL_FOLLOW_UP_LINK),
-          sessionPrice: process.env.NEXT_PUBLIC_FOLLOW_UP_PRICE?.trim() || null,
-          sessionDuration: null,
+          calLinks: getCalLinks(followUpLink),
+          sessionPrice:
+            settings?.followupPrice ||
+            process.env.NEXT_PUBLIC_FOLLOW_UP_PRICE?.trim() ||
+            null,
+          sessionDuration: settings?.followupDuration || null,
         },
       }}
     />

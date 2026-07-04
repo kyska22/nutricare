@@ -104,6 +104,86 @@ export const translations = {
         rawResults: "Resultados guardados",
       },
     },
+    adminAuth: {
+      eyebrow: "Acceso profesional",
+      title: "Ingreso de nutricionista",
+      subtitle:
+        "Inicia sesión para revisar evaluaciones guardadas y completar el seguimiento profesional.",
+      email: "Correo electrónico",
+      password: "Contraseña",
+      signIn: "Iniciar sesión",
+      signingIn: "Iniciando sesión...",
+      signOut: "Cerrar sesión",
+      invalidCredentials: "No fue posible iniciar sesión. Verifica el correo y la contraseña.",
+      notConfigured:
+        "Supabase Auth no está configurado. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    },
+    adminNavigation: {
+      evaluations: "Evaluaciones",
+      settings: "Configuración",
+    },
+    adminSettings: {
+      title: "Centro de configuración",
+      subtitle:
+        "Administra los datos profesionales, agenda, precios e informes de la clínica.",
+      sections: {
+        profile: {
+          title: "Perfil profesional",
+          description: "Datos visibles para la gestión profesional.",
+        },
+        agenda: {
+          title: "Agenda",
+          description: "Valores, duración y enlaces de Cal.com por tipo de consulta.",
+        },
+        clinic: {
+          title: "Clínica",
+          description: "Identidad general de NutriJenhFit.",
+        },
+        reports: {
+          title: "Informes",
+          description: "Textos reutilizables para comunicaciones e informes.",
+        },
+      },
+      fields: {
+        professionalName: "Nombre profesional",
+        professionalRegistration: "Registro profesional",
+        email: "Email",
+        phone: "Teléfono",
+        whatsapp: "WhatsApp",
+        country: "País",
+        city: "Ciudad",
+        currency: "Moneda",
+        firstConsultationPrice: "Precio primera consulta",
+        firstConsultationDuration: "Duración primera consulta",
+        firstConsultationCalLink: "Link Cal.com primera consulta",
+        followupPrice: "Precio consulta de seguimiento",
+        followupDuration: "Duración consulta de seguimiento",
+        followupCalLink: "Link Cal.com seguimiento",
+        clinicName: "Nombre de la clínica",
+        logoUrl: "Logo",
+        emailSignature: "Firma profesional",
+        reportFooter: "Pie del informe",
+        patientFinalText: "Texto final para el paciente",
+      },
+      placeholders: {
+        logo: "URL del logo. La carga se implementará más adelante.",
+      },
+      logoNotice:
+        "La estructura del logo queda preparada. La carga de archivos se implementará en una fase posterior.",
+      actions: {
+        save: "Guardar configuración",
+        saving: "Guardando...",
+      },
+      feedback: {
+        saved: "Configuración guardada correctamente.",
+        error: "No fue posible guardar la configuración. Revisa la consola para más detalles.",
+      },
+      states: {
+        loading: "Cargando configuración...",
+        notConfigured: "Base de datos no configurada. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+        error: "No fue posible cargar la configuración. Revisa la consola para más detalles.",
+      },
+    },
     actions: {
       submit: "Guardar evaluación",
       submitting: "Guardando...",
@@ -682,6 +762,86 @@ export const translations = {
         rawResults: "Resultados salvos",
       },
     },
+    adminAuth: {
+      eyebrow: "Acesso profissional",
+      title: "Login da nutricionista",
+      subtitle:
+        "Inicie sessão para revisar avaliações salvas e completar o acompanhamento profissional.",
+      email: "E-mail",
+      password: "Senha",
+      signIn: "Iniciar sessão",
+      signingIn: "Iniciando sessão...",
+      signOut: "Sair",
+      invalidCredentials: "Não foi possível iniciar sessão. Verifique o e-mail e a senha.",
+      notConfigured:
+        "Supabase Auth não está configurado. Verifique NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    },
+    adminNavigation: {
+      evaluations: "Avaliações",
+      settings: "Configuração",
+    },
+    adminSettings: {
+      title: "Centro de configuração",
+      subtitle:
+        "Administre os dados profissionais, agenda, preços e relatórios da clínica.",
+      sections: {
+        profile: {
+          title: "Perfil profissional",
+          description: "Dados visíveis para a gestão profissional.",
+        },
+        agenda: {
+          title: "Agenda",
+          description: "Valores, duração e links do Cal.com por tipo de consulta.",
+        },
+        clinic: {
+          title: "Clínica",
+          description: "Identidade geral da NutriJenhFit.",
+        },
+        reports: {
+          title: "Relatórios",
+          description: "Textos reutilizáveis para comunicações e relatórios.",
+        },
+      },
+      fields: {
+        professionalName: "Nome profissional",
+        professionalRegistration: "Registro profissional",
+        email: "E-mail",
+        phone: "Telefone",
+        whatsapp: "WhatsApp",
+        country: "País",
+        city: "Cidade",
+        currency: "Moeda",
+        firstConsultationPrice: "Preço primeira consulta",
+        firstConsultationDuration: "Duração primeira consulta",
+        firstConsultationCalLink: "Link Cal.com primeira consulta",
+        followupPrice: "Preço consulta de acompanhamento",
+        followupDuration: "Duração consulta de acompanhamento",
+        followupCalLink: "Link Cal.com acompanhamento",
+        clinicName: "Nome da clínica",
+        logoUrl: "Logo",
+        emailSignature: "Assinatura profissional",
+        reportFooter: "Rodapé do relatório",
+        patientFinalText: "Texto final para o paciente",
+      },
+      placeholders: {
+        logo: "URL do logo. O upload será implementado mais adiante.",
+      },
+      logoNotice:
+        "A estrutura do logo fica preparada. O upload de arquivos será implementado em uma fase posterior.",
+      actions: {
+        save: "Salvar configuração",
+        saving: "Salvando...",
+      },
+      feedback: {
+        saved: "Configuração salva corretamente.",
+        error: "Não foi possível salvar a configuração. Verifique o console para mais detalhes.",
+      },
+      states: {
+        loading: "Carregando configuração...",
+        notConfigured: "Banco de dados não configurado. Verifique NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+        error: "Não foi possível carregar a configuração. Verifique o console para mais detalhes.",
+      },
+    },
     actions: {
       submit: "Salvar avaliação",
       submitting: "Salvando...",
@@ -1258,6 +1418,86 @@ export const translations = {
         recommendations: "Recommendations",
         followUpPlan: "Follow-up plan",
         rawResults: "Saved results",
+      },
+    },
+    adminAuth: {
+      eyebrow: "Professional access",
+      title: "Nutritionist sign in",
+      subtitle:
+        "Sign in to review saved evaluations and complete professional follow-up.",
+      email: "Email",
+      password: "Password",
+      signIn: "Sign in",
+      signingIn: "Signing in...",
+      signOut: "Sign out",
+      invalidCredentials: "Unable to sign in. Check the email and password.",
+      notConfigured:
+        "Supabase Auth is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    },
+    adminNavigation: {
+      evaluations: "Evaluations",
+      settings: "Settings",
+    },
+    adminSettings: {
+      title: "Settings center",
+      subtitle:
+        "Manage professional details, scheduling, prices, and clinic report texts.",
+      sections: {
+        profile: {
+          title: "Professional profile",
+          description: "Visible information for professional management.",
+        },
+        agenda: {
+          title: "Schedule",
+          description: "Prices, duration, and Cal.com links by consultation type.",
+        },
+        clinic: {
+          title: "Clinic",
+          description: "General NutriJenhFit identity.",
+        },
+        reports: {
+          title: "Reports",
+          description: "Reusable text for communications and reports.",
+        },
+      },
+      fields: {
+        professionalName: "Professional name",
+        professionalRegistration: "Professional registration",
+        email: "Email",
+        phone: "Phone",
+        whatsapp: "WhatsApp",
+        country: "Country",
+        city: "City",
+        currency: "Currency",
+        firstConsultationPrice: "First consultation price",
+        firstConsultationDuration: "First consultation duration",
+        firstConsultationCalLink: "First consultation Cal.com link",
+        followupPrice: "Follow-up price",
+        followupDuration: "Follow-up duration",
+        followupCalLink: "Follow-up Cal.com link",
+        clinicName: "Clinic name",
+        logoUrl: "Logo",
+        emailSignature: "Professional signature",
+        reportFooter: "Report footer",
+        patientFinalText: "Final text for the patient",
+      },
+      placeholders: {
+        logo: "Logo URL. Upload will be implemented later.",
+      },
+      logoNotice:
+        "The logo structure is prepared. File upload will be implemented in a later phase.",
+      actions: {
+        save: "Save settings",
+        saving: "Saving...",
+      },
+      feedback: {
+        saved: "Settings saved successfully.",
+        error: "Settings could not be saved. Check the console for details.",
+      },
+      states: {
+        loading: "Loading settings...",
+        notConfigured: "Database not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+        error: "Settings could not be loaded. Check the console for details.",
       },
     },
     actions: {
