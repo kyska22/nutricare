@@ -4,8 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import { AnthropometricAssessment } from "@/lib/calculations";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import {
-  createAnonymousPatient,
-  createPackage,
   isSupabaseConfigured,
   saveEvaluation,
 } from "@/lib/supabase";
@@ -101,6 +99,7 @@ export function AssessmentSummary({
   const [databaseFeedback, setDatabaseFeedback] = useState<
     "evaluationSaved" | "databaseNotConfigured" | "databaseError" | null
   >(null);
+  const [databaseErrorDetail, setDatabaseErrorDetail] = useState<string | null>(null);
   const [isSavingEvaluation, setIsSavingEvaluation] = useState(false);
   const [savedPatientCode, setSavedPatientCode] = useState<string | null>(null);
   const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
@@ -223,10 +222,6 @@ export function AssessmentSummary({
     {
       label: t("clinicalHistory.fields.occupation"),
       value: text(personal?.occupation),
-    },
-    {
-      label: t("clinicalHistory.fields.identificationNumber"),
-      value: text(personal?.identificationNumber),
     },
     {
       label: t("clinicalHistory.fields.birthDate"),
@@ -561,8 +556,6 @@ export function AssessmentSummary({
   };
 
   const handleSave = () => {
-    // Future integration point: persist the professional review in a database.
-    console.log("Professional review draft:", review);
     showFeedback("saved");
   };
 
@@ -577,6 +570,7 @@ export function AssessmentSummary({
     }
 
     setIsSavingEvaluation(true);
+    setDatabaseErrorDetail(null);
 
     try {
       if (!idempotencyKeyRef.current) {
@@ -586,31 +580,9 @@ export function AssessmentSummary({
             : `${createdAt}-${Math.random().toString(36).slice(2)}`;
       }
 
-      const storageKey = "nutrijenhfit-anonymous-patient-code";
-      const existingPatientCode = window.localStorage.getItem(storageKey) ?? undefined;
-      const patientResult = await createAnonymousPatient(existingPatientCode);
-
-      if (patientResult.status !== "success") {
-        console.error("Unable to create anonymous patient:", patientResult);
-        showDatabaseFeedback(
-          patientResult.status === "not_configured"
-            ? "databaseNotConfigured"
-            : "databaseError",
-        );
-        return;
-      }
-
-      if (!existingPatientCode) {
-        window.localStorage.setItem(storageKey, patientResult.data.patient_code);
-        const packageResult = await createPackage(patientResult.data.id);
-
-        if (packageResult.status === "error") {
-          console.error("Unable to create session package:", packageResult.error);
-        }
-      }
-
+      const invitationToken = new URLSearchParams(window.location.search).get("invite");
       const evaluationResult = await saveEvaluation({
-        patientId: patientResult.data.id,
+        invitationToken: invitationToken ?? undefined,
         idempotencyKey: idempotencyKeyRef.current,
         formData: data,
         assessment,
@@ -620,7 +592,7 @@ export function AssessmentSummary({
       });
 
       if (evaluationResult.status !== "success") {
-        console.error("Unable to save evaluation:", evaluationResult);
+        setDatabaseErrorDetail(evaluationResult.status === "error" ? evaluationResult.error : null);
         showDatabaseFeedback(
           evaluationResult.status === "not_configured"
             ? "databaseNotConfigured"
@@ -629,13 +601,14 @@ export function AssessmentSummary({
         return;
       }
 
-      setSavedPatientCode(patientResult.data.patient_code);
+      setSavedPatientCode(evaluationResult.data.patient_code ?? "");
       setSavedEvaluationId(evaluationResult.data.id);
       showDatabaseFeedback("evaluationSaved");
     } finally {
       setIsSavingEvaluation(false);
     }
   };
+
 
   return (
     <main className="professional-report min-h-screen px-4 py-7 sm:px-6 sm:py-10">
@@ -770,8 +743,9 @@ export function AssessmentSummary({
             </p>
           ) : null}
           {databaseFeedback ? (
-            <p role="status" className="mb-3 text-center text-sm font-semibold text-emerald-800">
+            <p role={databaseFeedback === "databaseError" ? "alert" : "status"} className={`mb-3 text-center text-sm font-semibold ${databaseFeedback === "databaseError" ? "text-rose-800" : "text-emerald-800"}`}>
               {t(`professionalReport.feedback.${databaseFeedback}`)}
+              {databaseErrorDetail ? <span className="mt-1 block font-normal">{databaseErrorDetail}</span> : null}
             </p>
           ) : null}
           {savedPatientCode ? (

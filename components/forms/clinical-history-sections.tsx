@@ -130,13 +130,6 @@ export function PersonalInformationSection({
           placeholder={t("clinicalHistory.placeholders.occupation")}
         />
         <InputField
-          name="personalInformation.identificationNumber"
-          label={t("clinicalHistory.fields.identificationNumber")}
-          register={register}
-          error={sectionErrors?.identificationNumber}
-          placeholder={t("clinicalHistory.placeholders.identificationNumber")}
-        />
-        <InputField
           name="personalInformation.birthDate"
           label={t("clinicalHistory.fields.birthDate")}
           register={register}

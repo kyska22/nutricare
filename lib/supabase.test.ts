@@ -12,7 +12,6 @@ describe("Supabase evaluation payload", () => {
         lastName: "Paciente",
         email: "ana@example.com",
         phone: "+000000000",
-        identificationNumber: "ID-SECRET",
         birthDate: "1990-01-01",
         country: "Private country",
         occupation: "Private occupation",

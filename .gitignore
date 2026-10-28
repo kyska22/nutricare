@@ -28,3 +28,7 @@ next-env.d.ts
 
 #datos no pubicos
 /calculos-img
+
+
+# Documentos de pacientes: nunca subir al repositorio
+/soportes/

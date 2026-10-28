@@ -12,6 +12,16 @@ export function EvaluationsList() {
   const { locale, t } = useI18n();
   const [state, setState] = useState<LoadState>("loading");
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [inviteError, setInviteError] = useState("");
+
+  const createInvitation = async () => {
+    setInviteError("");
+    const response = await fetch("/api/evaluation-invitations", { method: "POST" });
+    const result = await response.json();
+    if (!response.ok) { setInviteError(result.error ?? "No se pudo generar el enlace."); return; }
+    setInviteUrl(result.url);
+  };
 
   const loadEvaluations = useCallback(async () => {
     setState("loading");
@@ -57,6 +67,16 @@ export function EvaluationsList() {
       subtitle={t("adminEvaluations.subtitle")}
     >
       <div className="mt-6 flex justify-end">
+        <button type="button" onClick={() => void createInvitation()} className="rounded-xl bg-emerald-800 px-4 py-2.5 font-bold text-white hover:bg-emerald-900">
+          Generar enlace público
+        </button>
+      </div>
+      {inviteUrl ? <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-4">
+        <label className="block text-sm font-bold text-emerald-900">Enlace para compartir</label>
+        <input readOnly value={inviteUrl} onFocus={(event) => event.currentTarget.select()} className="mt-2 w-full rounded-lg border border-slate-300 p-2 text-sm" />
+      </div> : null}
+      {inviteError ? <p role="alert" className="mt-2 text-sm text-red-700">{inviteError}</p> : null}
+      <div className="mt-3 flex justify-end">
         <button
           type="button"
           onClick={() => void loadEvaluations()}
