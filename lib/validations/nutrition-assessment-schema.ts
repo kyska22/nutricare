@@ -81,7 +81,6 @@ export function createNutritionAssessmentSchema(t: Translate) {
         phone: optionalText,
         country: optionalText,
         occupation: optionalText,
-        identificationNumber: optionalText,
         birthDate: optionalText,
         sex: z.enum(["male", "female", "prefer_not_to_answer"]).optional(),
         consultationReasons: z.array(z.enum(consultationReasons)).default([]),

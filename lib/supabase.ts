@@ -26,6 +26,7 @@ interface PackageRecord {
 interface EvaluationRecord {
   id: string;
   patient_id: string;
+  patient_code?: string;
   nutritionist_id?: string | null;
 }
 
@@ -114,7 +115,7 @@ export interface ProfessionalReviewInput {
 }
 
 interface SaveEvaluationInput {
-  patientId: string;
+  invitationToken?: string;
   idempotencyKey: string;
   formData: NutritionAssessmentFormValues;
   assessment: AnthropometricAssessment;
@@ -547,7 +548,6 @@ export async function getEvaluations(): Promise<
       .select(
         "id, evaluation_date, created_at, consultation_type, age, sex, weight_kg, bmi, bmi_classification, risk_level, anonymous_patients(patient_code)",
       )
-      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .order("evaluation_date", { ascending: false });
 
     if (error) {
@@ -585,7 +585,6 @@ export async function getEvaluationById(
       .from("evaluations")
       .select("*, anonymous_patients(patient_code)")
       .eq("id", evaluationId)
-      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .single();
 
     if (error) {
@@ -659,14 +658,12 @@ export async function updateEvaluationReview(
     const { data, error } = await supabase
       .from("evaluations")
       .update({
-        nutritionist_id: nutritionistResult.data.id,
         nutritionist_notes: review.nutritionistObservations.trim() || null,
         recommendations: review.recommendations.trim() || null,
         follow_up_plan: review.followUpPlan.trim() || null,
         raw_results: rawResults,
       })
       .eq("id", evaluationId)
-      .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
       .select("id")
       .single();
 
@@ -769,21 +766,20 @@ export async function createAnonymousPatient(patientCode = generatePatientCode()
 }
 
 export async function saveEvaluation({
-  patientId,
+  invitationToken,
   idempotencyKey,
   formData,
   assessment,
   evaluationDate,
   automaticObservations,
   professionalReview,
-}: SaveEvaluationInput) {
+}: SaveEvaluationInput): Promise<SupabaseResult<EvaluationRecord>> {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
     return { status: "not_configured" } satisfies SupabaseResult<EvaluationRecord>;
   }
 
-  const anthropometrics = formData.anthropometrics;
   const rawResults = buildAnonymizedRawResults(
     formData,
     assessment,
@@ -792,67 +788,26 @@ export async function saveEvaluation({
   );
 
   try {
-    const nutritionistResult = await getCurrentNutritionist(supabase);
-
-    if (nutritionistResult.status !== "success") {
-      return nutritionistResult;
+    const response = await fetch("/api/public-evaluations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        invitationToken: invitationToken ?? null,
+        idempotencyKey,
+        evaluationDate: evaluationDate ?? new Date().toISOString(),
+        formData,
+        assessment,
+        automaticObservations,
+        professionalReview,
+        rawResults,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) return { status: "error", error: result.error ?? "Unable to save evaluation." };
+    if (!result.data || typeof result.data.id !== "string") {
+      return { status: "error", error: "The server returned an invalid evaluation result." };
     }
-
-    const { data, error } = await supabase
-      .from("evaluations")
-      .insert({
-        patient_id: patientId,
-        nutritionist_id: nutritionistResult.data.id,
-        idempotency_key: idempotencyKey,
-        evaluation_date: evaluationDate ?? new Date().toISOString(),
-        consultation_type: formData.personalInformation?.consultationType ?? null,
-        sex: anthropometrics.sex,
-        age: anthropometrics.age,
-        weight_kg: anthropometrics.weightKg,
-        height_m: anthropometrics.heightMeters,
-        waist_cm: anthropometrics.abdominalCircumferenceCm,
-        hip_cm: anthropometrics.hipCircumferenceCm ?? null,
-        daily_water_liters: formData.psychobiological.dailyWaterLiters,
-        bmi: assessment.bmi.value,
-        bmi_classification: assessment.bmi.classification,
-        waist_hip_index: assessment.waistHipRatio?.value ?? null,
-        risk_level: assessment.waistHeightRatio?.classification ?? null,
-        body_fat_percentage: assessment.bodyFat?.percentage ?? null,
-        fat_mass_kg: assessment.bodyComposition?.fatMassKg ?? null,
-        fat_free_mass_kg: assessment.bodyComposition?.fatFreeMassKg ?? null,
-        muscle_mass_kg: assessment.bodyComposition?.muscleMassKg ?? null,
-        resting_energy_kcal: assessment.restingEnergyExpenditure.valueKcal,
-        total_energy_kcal: assessment.totalEnergyExpenditure?.valueKcal ?? null,
-        raw_results: rawResults,
-        nutritionist_notes:
-          professionalReview.nutritionistObservations.trim() || null,
-        recommendations: professionalReview.recommendations.trim() || null,
-        follow_up_plan: professionalReview.followUpPlan.trim() || null,
-      })
-      .select("id, patient_id")
-      .single();
-
-    if (error) {
-      if ((error as { code?: string }).code === "23505") {
-        const { data: existingEvaluation, error: existingError } = await supabase
-          .from("evaluations")
-          .select("id, patient_id")
-          .eq("idempotency_key", idempotencyKey)
-          .or(`nutritionist_id.eq.${nutritionistResult.data.id},nutritionist_id.is.null`)
-          .single();
-
-        if (!existingError && existingEvaluation) {
-          return {
-            status: "success",
-            data: existingEvaluation,
-          } satisfies SupabaseResult<EvaluationRecord>;
-        }
-      }
-
-      return { status: "error", error: error.message } satisfies SupabaseResult<EvaluationRecord>;
-    }
-
-    return { status: "success", data } satisfies SupabaseResult<EvaluationRecord>;
+    return { status: "success", data: result.data as EvaluationRecord };
   } catch (error) {
     return { status: "error", error: toErrorMessage(error) } satisfies SupabaseResult<EvaluationRecord>;
   }

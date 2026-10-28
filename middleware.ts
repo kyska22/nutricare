@@ -12,20 +12,20 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginRoute = pathname === "/admin/login";
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isPatientEvaluationRoute = pathname === "/";
 
-  if (!isAdminRoute) {
+  if (!isAdminRoute && !isPatientEvaluationRoute) {
     return NextResponse.next();
   }
 
   if (!isSupabaseConfigured()) {
-    if (isLoginRoute) {
-      return NextResponse.next();
+    if (isAdminRoute && !isLoginRoute) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      loginUrl.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(loginUrl);
     }
-
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/admin/login";
-    loginUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
   }
 
   let response = NextResponse.next({ request });
@@ -57,11 +57,37 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !isLoginRoute) {
+  if (!user && isAdminRoute && !isLoginRoute) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/admin/login";
+    loginUrl.search = "";
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (!user && isPatientEvaluationRoute) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/pacientes/acceso";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (user && isAdminRoute) {
+    const { data: nutritionist, error: nutritionistError } = await supabase
+      .from("nutritionists")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const hasProfessionalRole = user.app_metadata?.role === "nutritionist";
+
+    if (nutritionistError || (!nutritionist && !hasProfessionalRole)) {
+      const patientUrl = request.nextUrl.clone();
+      patientUrl.pathname = "/pacientes/acceso";
+      patientUrl.search = "";
+      patientUrl.searchParams.set("notice", "professional");
+      return NextResponse.redirect(patientUrl);
+    }
   }
 
   if (user && isLoginRoute) {
@@ -75,5 +101,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/", "/admin/:path*"],
 };

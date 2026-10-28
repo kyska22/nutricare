@@ -52,7 +52,6 @@ const emptyValues = {
     phone: "",
     country: "",
     occupation: "",
-    identificationNumber: "",
     birthDate: "",
     sex: undefined,
     consultationReasons: [],
@@ -183,7 +182,6 @@ export function NutritionAssessmentForm() {
       activityLevel: data.psychobiological.activityLevel,
     });
 
-    console.log("Nutrition assessment:", { data, assessment });
     setSubmission({ data, assessment, createdAt: new Date().toISOString() });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -223,19 +221,24 @@ export function NutritionAssessmentForm() {
               </div>
               <span className="text-lg font-bold">{t("app.name")}</span>
             </div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
-              <span className="hidden sm:inline">{t("app.language")}</span>
-              <select
-                value={locale}
-                onChange={(event) => setLocale(event.target.value as Locale)}
-                aria-label={t("app.language")}
-                className="rounded-xl border border-white/20 bg-emerald-900/50 px-3 py-2 text-white outline-none focus:ring-4 focus:ring-white/15"
-              >
-                <option value="es">ES</option>
-                <option value="pt">PT</option>
-                <option value="en">EN</option>
-              </select>
-            </label>
+            <div className="flex items-center gap-3">
+              <Link href="/pacientes/acceso" className="rounded-xl px-2 py-2 text-sm font-semibold text-emerald-50 transition hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/15">
+                {t("patientAuth.portalLink")}
+              </Link>
+              <label className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
+                <span className="hidden sm:inline">{t("app.language")}</span>
+                <select
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value as Locale)}
+                  aria-label={t("app.language")}
+                  className="rounded-xl border border-white/20 bg-emerald-900/50 px-3 py-2 text-white outline-none focus:ring-4 focus:ring-white/15"
+                >
+                  <option value="es">ES</option>
+                  <option value="pt">PT</option>
+                  <option value="en">EN</option>
+                </select>
+              </label>
+            </div>
           </div>
           <div className="px-5 py-9 sm:px-8 sm:py-12">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">

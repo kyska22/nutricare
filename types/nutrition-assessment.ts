@@ -153,7 +153,6 @@ export interface NutritionAssessmentFormValues {
     phone?: string;
     country?: string;
     occupation?: string;
-    identificationNumber?: string;
     birthDate?: string;
     sex?: Sex;
     consultationReasons: ConsultationReason[];
