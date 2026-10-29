@@ -79,4 +79,48 @@ select {
   .print-only {
     display: block !important;
   }
+
+  .admin-shell:has(.nutritionist-report) {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .admin-shell:has(.nutritionist-report) > .admin-shell-content {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-shell-header,
+  .admin-shell-nav,
+  .admin-report-toolbar,
+  .admin-report-feedback,
+  .nutritionist-report details,
+  .nutritionist-report textarea {
+    display: none !important;
+  }
+
+  .nutritionist-report {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 7mm !important;
+    margin-top: 0 !important;
+  }
+
+  .nutrition-report-cover,
+  .nutrition-report-footer {
+    grid-column: 1 / -1 !important;
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .nutritionist-report > section,
+  .nutritionist-report > div {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .nutrition-report-footer {
+    background: #14532d !important;
+    print-color-adjust: exact;
+  }
 }

@@ -7,22 +7,26 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserAuthClient, isSupabaseAuthConfigured } from "@/lib/supabase-auth";
 import { Locale } from "@/lib/i18n/translations";
 import { useI18n } from "@/lib/i18n/i18n-provider";
+import { PatientSessionControl } from "@/components/patients/patient-session-control";
 
 type PatientAuthMode = "signIn" | "signUp" | "recovery" | "newPassword";
 
 function getSafeNextPath() {
   const requested = new URLSearchParams(window.location.search).get("next");
-  if (!requested || !requested.startsWith("/") || requested.startsWith("//") || requested.includes("\\")) {
-    return "/";
+  if (!requested) {
+    return "/pacientes/inicio";
+  }
+  if (!requested.startsWith("/") || requested.startsWith("//") || requested.includes("\\")) {
+    return "/pacientes/inicio";
   }
 
   try {
     const destination = new URL(requested, window.location.origin);
     return destination.origin === window.location.origin
       ? `${destination.pathname}${destination.search}${destination.hash}`
-      : "/";
+      : "/pacientes/inicio";
   } catch {
-    return "/";
+    return "/pacientes/inicio";
   }
 }
 
@@ -163,6 +167,7 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
             <Image src="/brand/nutrijenhfit-logo.png" alt="" width={44} height={44} priority className="h-11 w-11 rounded-xl bg-white object-contain p-1 shadow-sm" />
             <span className="text-lg font-extrabold text-emerald-950">NutriJenhFit</span>
           </Link>
+          <PatientSessionControl variant="light" />
           <label className="flex items-center gap-2 text-sm font-semibold text-emerald-950">
             <span className="sr-only">{t("app.language")}</span>
             <select value={locale} onChange={(event) => setLocale(event.target.value as Locale)} aria-label={t("app.language")} className="rounded-xl border border-emerald-900/15 bg-white px-3 py-2 outline-none focus:ring-4 focus:ring-emerald-100">

@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "./admin-shell";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 import {
   EvaluationDetailRecord,
   getEvaluationById,
+  getNutritionistSettings,
+  NutritionistSettings,
   updateEvaluationReview,
 } from "@/lib/supabase";
 
@@ -16,6 +18,10 @@ type InfoRow = { label: string; value: string };
 
 interface ReviewDraft {
   nutritionistObservations: string;
+  nutritionDiagnosis: string;
+  goalsAndPrescription: string;
+  mealPlan: string;
+  lifestylePlan: string;
   recommendations: string;
   followUpPlan: string;
 }
@@ -70,12 +76,14 @@ function ReviewCard({
   editing,
   onChange,
   emptyText,
+  rows = 6,
 }: {
   title: string;
   value: string;
   editing: boolean;
   onChange: (value: string) => void;
   emptyText: string;
+  rows?: number;
 }) {
   return (
     <section className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-lg shadow-emerald-950/5 sm:p-6">
@@ -86,7 +94,7 @@ function ReviewCard({
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          rows={6}
+          rows={rows}
           className="min-h-36 w-full resize-y rounded-2xl border border-emerald-950/15 bg-emerald-50/30 px-4 py-3 leading-6 text-emerald-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
         />
       ) : (
@@ -102,11 +110,16 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
   const { locale, t } = useI18n();
   const [state, setState] = useState<LoadState>("loading");
   const [evaluation, setEvaluation] = useState<EvaluationDetailRecord | null>(null);
+  const [nutritionistSettings, setNutritionistSettings] = useState<NutritionistSettings | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<"saved" | "error" | null>(null);
   const [draft, setDraft] = useState<ReviewDraft>({
     nutritionistObservations: "",
+    nutritionDiagnosis: "",
+    goalsAndPrescription: "",
+    mealPlan: "",
+    lifestylePlan: "",
     recommendations: "",
     followUpPlan: "",
   });
@@ -135,6 +148,14 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
     };
   }, [evaluationId]);
 
+  useEffect(() => {
+    let active = true;
+    void getNutritionistSettings().then((result) => {
+      if (active && result.status === "success") setNutritionistSettings(result.data);
+    });
+    return () => { active = false; };
+  }, []);
+
   const raw = evaluation?.rawResults ?? null;
   const clinicalData = useMemo(
     () => asObject(raw?.clinicalData) ?? asObject(raw?.formData),
@@ -157,6 +178,10 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
         evaluation.nutritionistNotes ??
         asString(storedReview?.nutritionistObservations) ??
         "",
+      nutritionDiagnosis: asString(storedReview?.nutritionDiagnosis) ?? "",
+      goalsAndPrescription: asString(storedReview?.goalsAndPrescription) ?? "",
+      mealPlan: asString(storedReview?.mealPlan) ?? "",
+      lifestylePlan: asString(storedReview?.lifestylePlan) ?? "",
       recommendations:
         evaluation.recommendations ??
         asString(storedReview?.recommendations) ??
@@ -193,6 +218,10 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
   };
 
   const personalInformation = asObject(clinicalData?.personalInformation);
+  const patientName = [
+    asString(personalInformation?.firstName),
+    asString(personalInformation?.lastName),
+  ].filter(Boolean).join(" ") || missing;
   const personalHistory = asObject(clinicalData?.personalHistory);
   const familyHistory = asObject(clinicalData?.familyHistory);
   const psychobiological = asObject(clinicalData?.psychobiological);
@@ -215,6 +244,10 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
         evaluation?.nutritionistNotes ??
         asString(storedReview?.nutritionistObservations) ??
         "",
+      nutritionDiagnosis: asString(storedReview?.nutritionDiagnosis) ?? "",
+      goalsAndPrescription: asString(storedReview?.goalsAndPrescription) ?? "",
+      mealPlan: asString(storedReview?.mealPlan) ?? "",
+      lifestylePlan: asString(storedReview?.lifestylePlan) ?? "",
       recommendations:
         evaluation?.recommendations ??
         asString(storedReview?.recommendations) ??
@@ -441,13 +474,7 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
       title={t("adminEvaluations.detailTitle")}
       subtitle={t("adminEvaluations.detailSubtitle")}
     >
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          href="/admin/evaluaciones"
-          className="inline-flex justify-center rounded-xl border border-emerald-700 bg-white px-4 py-2.5 font-bold text-emerald-800 transition hover:bg-emerald-50"
-        >
-          {t("adminEvaluations.actions.backToList")}
-        </Link>
+      <div className="admin-report-toolbar mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {state === "success" ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             {editing ? (
@@ -476,16 +503,25 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(true);
-                  setFeedback(null);
-                }}
-                className="rounded-xl bg-orange-500 px-5 py-2.5 font-bold text-white shadow-lg shadow-orange-900/10 hover:bg-orange-600"
-              >
-                {t("adminEvaluations.actions.editEvaluation")}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="rounded-xl border border-emerald-800 bg-white px-5 py-2.5 font-bold text-emerald-800 hover:bg-emerald-50"
+                >
+                  {t("adminEvaluations.actions.createPdf")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(true);
+                    setFeedback(null);
+                  }}
+                  className="rounded-xl bg-orange-500 px-5 py-2.5 font-bold text-white shadow-lg shadow-orange-900/10 hover:bg-orange-600"
+                >
+                  {t("adminEvaluations.actions.editEvaluation")}
+                </button>
+              </>
             )}
           </div>
         ) : null}
@@ -494,7 +530,7 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
       {feedback ? (
         <p
           role="status"
-          className={`mt-4 rounded-2xl px-4 py-3 text-center text-sm font-bold ${
+          className={`admin-report-feedback mt-4 rounded-2xl px-4 py-3 text-center text-sm font-bold ${
             feedback === "saved"
               ? "bg-emerald-100 text-emerald-900"
               : "bg-rose-100 text-rose-800"
@@ -513,7 +549,52 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
           </p>
         </section>
       ) : (
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="nutritionist-report mt-5 grid gap-5 lg:grid-cols-2">
+          <section className="nutrition-report-cover rounded-3xl border border-emerald-100 bg-white p-6 shadow-lg shadow-emerald-950/5 sm:p-8 lg:col-span-2">
+            <div className="flex flex-col gap-5 border-b border-emerald-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <Image
+                  src={nutritionistSettings?.logoUrl || "/brand/nutrijenhfit-logo.png"}
+                  alt={nutritionistSettings?.professionalName || t("app.name")}
+                  width={76}
+                  height={76}
+                  unoptimized
+                  className="h-16 w-16 rounded-2xl bg-white object-contain p-1"
+                />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
+                    {nutritionistSettings?.clinicName || t("app.name")}
+                  </p>
+                  <h2 className="mt-1 text-2xl font-extrabold text-emerald-950 sm:text-3xl">
+                    {t("professionalReport.title")}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {nutritionistSettings?.professionalName || t("app.name")}
+                    {nutritionistSettings?.professionalRegistration ? ` · ${nutritionistSettings.professionalRegistration}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 px-5 py-4 sm:min-w-56">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+                  {t("adminEvaluations.fields.patientCode")}
+                </p>
+                <p className="mt-1 text-lg font-bold text-emerald-950">{evaluation?.patientCode || missing}</p>
+                <p className="mt-3 text-xs text-slate-600">
+                  {new Intl.DateTimeFormat(localeTag, { dateStyle: "long" }).format(new Date(evaluation?.evaluationDate ?? Date.now()))}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t("adminEvaluations.fields.patient")}</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-950">{patientName}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t("adminEvaluations.fields.consultationType")}</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-950">{translate("clinicalHistory.options.consultationType", evaluation?.consultationType)}</p>
+              </div>
+            </div>
+          </section>
           <div className="lg:col-span-2">
             <ClinicalCard
               title={t("adminEvaluations.sections.general")}
@@ -553,6 +634,38 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
           </section>
 
           <ReviewCard
+            title={t("adminEvaluations.sections.nutritionDiagnosis")}
+            value={draft.nutritionDiagnosis}
+            editing={editing}
+            onChange={(value) => setDraft((current) => ({ ...current, nutritionDiagnosis: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("adminEvaluations.sections.goalsAndPrescription")}
+            value={draft.goalsAndPrescription}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, goalsAndPrescription: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("adminEvaluations.sections.mealPlan")}
+            value={draft.mealPlan}
+            editing={editing}
+            rows={12}
+            onChange={(value) => setDraft((current) => ({ ...current, mealPlan: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("adminEvaluations.sections.lifestylePlan")}
+            value={draft.lifestylePlan}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, lifestylePlan: value }))}
+            emptyText={missing}
+          />
+
+          <ReviewCard
             title={t("adminEvaluations.sections.nutritionistObservations")}
             value={draft.nutritionistObservations}
             editing={editing}
@@ -582,6 +695,14 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
             }
             emptyText={missing}
           />
+
+          <footer className="nutrition-report-footer rounded-3xl border border-emerald-100 bg-emerald-950 px-6 py-5 text-sm leading-6 text-emerald-50 lg:col-span-2">
+            <p className="font-bold text-white">
+              {nutritionistSettings?.professionalName || nutritionistSettings?.clinicName || t("app.name")}
+            </p>
+            <p>{[nutritionistSettings?.email, nutritionistSettings?.phone, nutritionistSettings?.whatsapp].filter(Boolean).join(" · ")}</p>
+            {nutritionistSettings?.reportFooter ? <p className="mt-2 whitespace-pre-wrap">{nutritionistSettings.reportFooter}</p> : null}
+          </footer>
 
           <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
             <summary className="cursor-pointer font-bold text-emerald-800">
