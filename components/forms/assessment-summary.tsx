@@ -8,6 +8,7 @@ import {
   saveEvaluation,
 } from "@/lib/supabase";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
+import { PatientSessionControl } from "@/components/patients/patient-session-control";
 
 interface AssessmentSummaryProps {
   data: NutritionAssessmentFormValues;
@@ -93,7 +94,7 @@ export function AssessmentSummary({
     recommendations: "",
     followUpPlan: "",
   });
-  const [feedback, setFeedback] = useState<"copied" | "saved" | "pdf" | null>(
+  const [feedback, setFeedback] = useState<"copied" | "saved" | null>(
     null,
   );
   const [databaseFeedback, setDatabaseFeedback] = useState<
@@ -381,6 +382,18 @@ export function AssessmentSummary({
     },
   ];
 
+  const recallRows = (['breakfast', 'lunch', 'dinner', 'snack'] as const).flatMap((meal) => {
+    const mealTime = data.recall24Hours[`${meal}Time`];
+    const mealPeriod = data.recall24Hours[`${meal}Period`];
+    return [
+      { label: t(`fields.${meal}`), value: text(data.recall24Hours[meal]) },
+      {
+        label: t(`fields.${meal}Time`),
+        value: mealTime ? `${mealTime} ${t(`options.timePeriod.${mealPeriod}`)}` : notProvided,
+      },
+    ];
+  });
+
   const foodFrequencyRows = [
     "dairy",
     "vegetables",
@@ -513,6 +526,10 @@ export function AssessmentSummary({
         dietaryRows,
       ),
       sectionText(
+        t("adminEvaluations.sections.recall"),
+        recallRows,
+      ),
+      sectionText(
         t("professionalReport.sections.foodFrequency"),
         foodFrequencyRows,
       ),
@@ -626,9 +643,12 @@ export function AssessmentSummary({
                 {t("professionalReport.preliminaryNotice")}
               </p>
             </div>
-            <span className="w-fit rounded-full border border-amber-200/50 bg-amber-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-950">
-              {t("professionalReport.status")}
-            </span>
+            <div className="flex flex-col items-end gap-3">
+              <PatientSessionControl />
+              <span className="w-fit rounded-full border border-amber-200/50 bg-amber-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-950">
+                {t("professionalReport.status")}
+              </span>
+            </div>
           </div>
         </header>
 
@@ -656,6 +676,10 @@ export function AssessmentSummary({
           <ReportSection
             title={t("professionalReport.sections.dietaryHistory")}
             rows={dietaryRows}
+          />
+          <ReportSection
+            title={t("adminEvaluations.sections.recall")}
+            rows={recallRows}
           />
           <ReportSection
             title={t("professionalReport.sections.foodFrequency")}
@@ -772,9 +796,8 @@ export function AssessmentSummary({
             </button>
             <button
               type="button"
-              onClick={() => showFeedback("pdf")}
-              aria-describedby="pdf-placeholder"
-              className="rounded-xl border border-dashed border-slate-400 px-4 py-3 font-bold text-slate-600 transition hover:bg-slate-50"
+              onClick={() => window.print()}
+              className="rounded-xl border border-emerald-800 px-4 py-3 font-bold text-emerald-800 transition hover:bg-emerald-50"
             >
               {t("professionalReport.actions.exportPdf")}
             </button>
@@ -798,9 +821,6 @@ export function AssessmentSummary({
               {t("professionalReport.actions.save")}
             </button>
           </div>
-          <p id="pdf-placeholder" className="mt-2 text-center text-xs text-slate-500">
-            {t("professionalReport.pdfPlaceholder")}
-          </p>
         </div>
 
         <div className="report-secondary-actions mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">

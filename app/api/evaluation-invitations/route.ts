@@ -5,29 +5,43 @@ export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
-  let response = NextResponse.next();
+  let commitResponseCookies: Array<(response: NextResponse) => void> = [];
+  const json = (body: unknown, init?: ResponseInit) => {
+    const result = NextResponse.json(body, init);
+    commitResponseCookies.forEach((commit) => commit(result));
+    return result;
+  };
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (cookies) => {
         cookies.forEach(({ name, value, options }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        commitResponseCookies = cookies.map(({ name, value, options }) => (response) => {
+          response.cookies.set(name, value, options);
+        });
       },
     },
   });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  try {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return json({ error: "Authentication required." }, { status: 401 });
   const { data: nutritionist, error: nutritionistError } = await supabase
     .from("nutritionists")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
   if (nutritionistError || (!nutritionist && user.app_metadata?.role !== "nutritionist")) {
-    return NextResponse.json({ error: "Nutritionist access required." }, { status: 403 });
+    return json({ error: "Nutritionist access required." }, { status: 403 });
   }
   const { data: token, error } = await supabase.rpc("create_evaluation_invitation");
-  if (error || typeof token !== "string") return NextResponse.json({ error: error?.message ?? "Invitation creation failed." }, { status: 400 });
+  if (error || typeof token !== "string") {
+    console.error("[evaluation-invitations] Invitation creation failed:", error?.message);
+    return json({ error: error?.message ?? "Invitation creation failed." }, { status: 400 });
+  }
   const origin = request.nextUrl.origin;
-  return NextResponse.json({ url: `${origin}/?invite=${encodeURIComponent(token)}` }, { headers: response.headers });
+  return json({ url: `${origin}/?invite=${encodeURIComponent(token)}` });
+  } catch (error) {
+    console.error("[evaluation-invitations] Unhandled error:", error);
+    return json({ error: "The server could not create the invitation." }, { status: 500 });
+  }
 }

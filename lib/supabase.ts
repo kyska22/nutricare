@@ -112,6 +112,10 @@ export interface ProfessionalReviewInput {
   nutritionistObservations: string;
   recommendations: string;
   followUpPlan: string;
+  nutritionDiagnosis?: string;
+  goalsAndPrescription?: string;
+  mealPlan?: string;
+  lifestylePlan?: string;
 }
 
 interface SaveEvaluationInput {
@@ -645,6 +649,10 @@ export async function updateEvaluationReview(
       nutritionistObservations: review.nutritionistObservations,
       recommendations: review.recommendations,
       followUpPlan: review.followUpPlan,
+      nutritionDiagnosis: review.nutritionDiagnosis ?? "",
+      goalsAndPrescription: review.goalsAndPrescription ?? "",
+      mealPlan: review.mealPlan ?? "",
+      lifestylePlan: review.lifestylePlan ?? "",
     },
   };
 
@@ -671,6 +679,46 @@ export async function updateEvaluationReview(
       return { status: "error", error: error.message };
     }
 
+    return { status: "success", data };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function deleteEvaluation(
+  evaluationId: string,
+): Promise<SupabaseResult<{ id: string }>> {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+
+    const { data, error } = await supabase
+      .from("evaluations")
+      .delete()
+      .eq("id", evaluationId)
+      .eq("nutritionist_id", nutritionistResult.data.id)
+      .select("id")
+      .single();
+
+    if (error) {
+      if (error.code === "42501") {
+        return {
+          status: "error",
+          error: "Supabase denied the delete. Apply migration 009_nutritionist_delete_evaluations.sql in the linked project.",
+        };
+      }
+      if (error.code === "PGRST116") {
+        return {
+          status: "error",
+          error: "No evaluation was deleted. Check that it belongs to this nutritionist and that migration 009 is applied.",
+        };
+      }
+      return { status: "error", error: error.message };
+    }
     return { status: "success", data };
   } catch (error) {
     return { status: "error", error: toErrorMessage(error) };

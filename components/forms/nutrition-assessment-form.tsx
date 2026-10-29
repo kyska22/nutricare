@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Resolver, useForm } from "react-hook-form";
 import { AssessmentSummary } from "./assessment-summary";
+import { PatientSessionControl } from "@/components/patients/patient-session-control";
 import {
   AnthropometricsSection,
   GastrointestinalSection,
@@ -125,6 +126,7 @@ export function NutritionAssessmentForm() {
     assessment: AnthropometricAssessment;
     createdAt: string;
   } | null>(null);
+  const [sessionRole, setSessionRole] = useState<"patient" | "nutritionist" | null>(null);
   const schema = useMemo(() => createNutritionAssessmentSchema(t), [t]);
 
   const {
@@ -221,10 +223,16 @@ export function NutritionAssessmentForm() {
               </div>
               <span className="text-lg font-bold">{t("app.name")}</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Link href="/pacientes/acceso" className="rounded-xl px-2 py-2 text-sm font-semibold text-emerald-50 transition hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/15">
-                {t("patientAuth.portalLink")}
-              </Link>
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+              <PatientSessionControl onRoleChange={setSessionRole} />
+              {sessionRole === "nutritionist" ? (
+                <Link
+                  href="/admin/evaluaciones"
+                  className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-xl bg-orange-400 px-3 py-2 text-sm font-bold text-emerald-950 transition hover:bg-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-200/40"
+                >
+                  {t("adminNavigation.evaluations")}
+                </Link>
+              ) : null}
               <label className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
                 <span className="hidden sm:inline">{t("app.language")}</span>
                 <select
@@ -240,7 +248,7 @@ export function NutritionAssessmentForm() {
               </label>
             </div>
           </div>
-          <div className="px-5 py-9 sm:px-8 sm:py-12">
+          {sessionRole === "nutritionist" ? null : <div className="px-5 py-9 sm:px-8 sm:py-12">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div className="max-w-4xl">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">
@@ -339,7 +347,7 @@ export function NutritionAssessmentForm() {
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
         </header>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">

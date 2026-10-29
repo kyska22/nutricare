@@ -34,9 +34,9 @@ export function AdminShell({ title, subtitle, children }: AdminShellProps) {
   };
 
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-7xl">
-        <header className="overflow-hidden rounded-3xl bg-emerald-900 text-white shadow-2xl shadow-emerald-950/10">
+    <main className="admin-shell min-h-screen px-4 py-6 sm:px-6 sm:py-10">
+      <div className="admin-shell-content mx-auto max-w-7xl">
+        <header className="admin-shell-header overflow-hidden rounded-3xl bg-emerald-900 text-white shadow-2xl shadow-emerald-950/10">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-8">
             <Link href="/" className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white p-1.5">
@@ -53,6 +53,10 @@ export function AdminShell({ title, subtitle, children }: AdminShellProps) {
             </Link>
 
             <div className="flex items-center gap-2">
+              <span className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-emerald-50 sm:inline-flex">
+                <span className="h-2 w-2 rounded-full bg-emerald-300" aria-hidden="true" />
+                {t("adminAuth.sessionActive")}
+              </span>
               <label className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
                 <span className="hidden sm:inline">{t("app.language")}</span>
                 <select
@@ -89,10 +93,11 @@ export function AdminShell({ title, subtitle, children }: AdminShellProps) {
           </div>
         </header>
 
-        <nav className="mt-5 flex flex-col gap-2 sm:flex-row">
+        <nav className="admin-shell-nav mt-5 flex flex-col gap-2 sm:flex-row">
           <Link
             href="/admin/evaluaciones"
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-100 bg-white px-4 py-2.5 text-sm font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+            aria-label={t("adminNavigation.evaluations")}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-orange-500 bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-950/10 transition hover:bg-orange-600"
           >
             {t("adminNavigation.evaluations")}
           </Link>

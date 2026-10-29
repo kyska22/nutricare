@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminShell } from "./admin-shell";
 import { useI18n } from "@/lib/i18n/i18n-provider";
-import { EvaluationListItem, getEvaluations } from "@/lib/supabase";
+import { deleteEvaluation, EvaluationListItem, getEvaluations } from "@/lib/supabase";
 
 type LoadState = "loading" | "success" | "not_configured" | "error";
 
@@ -14,13 +14,58 @@ export function EvaluationsList() {
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
   const [inviteUrl, setInviteUrl] = useState("");
   const [inviteError, setInviteError] = useState("");
+  const [creatingInvitation, setCreatingInvitation] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<"copied" | "error" | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteFeedback, setDeleteFeedback] = useState(false);
 
   const createInvitation = async () => {
+    if (creatingInvitation) return;
     setInviteError("");
-    const response = await fetch("/api/evaluation-invitations", { method: "POST" });
-    const result = await response.json();
-    if (!response.ok) { setInviteError(result.error ?? "No se pudo generar el enlace."); return; }
-    setInviteUrl(result.url);
+    setCreatingInvitation(true);
+    try {
+      const response = await fetch("/api/evaluation-invitations", { method: "POST" });
+      const result = await response.json();
+      if (!response.ok || typeof result.url !== "string") {
+        setInviteError(result.error ?? t("adminEvaluations.feedback.invitationError"));
+        return;
+      }
+      setInviteUrl(result.url);
+    } catch {
+      setInviteError(t("adminEvaluations.feedback.invitationError"));
+    } finally {
+      setCreatingInvitation(false);
+    }
+  };
+
+  const copyInvitation = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopyFeedback("copied");
+    } catch {
+      setCopyFeedback("error");
+    }
+  };
+
+  const handleDeleteEvaluation = async (evaluation: EvaluationListItem) => {
+    if (deletingId || !window.confirm(t("adminEvaluations.actions.confirmDelete"))) return;
+    setDeletingId(evaluation.id);
+    setDeleteError("");
+    setDeleteFeedback(false);
+    try {
+      const result = await deleteEvaluation(evaluation.id);
+      if (result.status === "success") {
+        setEvaluations((current) => current.filter((item) => item.id !== evaluation.id));
+        setDeleteFeedback(true);
+      } else {
+        setDeleteError(result.status === "error" ? result.error : t("adminEvaluations.feedback.deleteError"));
+      }
+    } catch {
+      setDeleteError(t("adminEvaluations.feedback.deleteError"));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const loadEvaluations = useCallback(async () => {
@@ -72,10 +117,14 @@ export function EvaluationsList() {
         </button>
       </div>
       {inviteUrl ? <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-4">
-        <label className="block text-sm font-bold text-emerald-900">Enlace para compartir</label>
+        <label className="block text-sm font-bold text-emerald-900">{t("adminEvaluations.actions.invitationLink")}</label>
         <input readOnly value={inviteUrl} onFocus={(event) => event.currentTarget.select()} className="mt-2 w-full rounded-lg border border-slate-300 p-2 text-sm" />
+        <button type="button" onClick={() => void copyInvitation()} className="mt-2 rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800">{t("adminEvaluations.actions.copyLink")}</button>
+        {copyFeedback ? <span role="status" className="ml-3 text-sm text-emerald-800">{t(`adminEvaluations.feedback.${copyFeedback === "copied" ? "linkCopied" : "copyError"}`)}</span> : null}
       </div> : null}
       {inviteError ? <p role="alert" className="mt-2 text-sm text-red-700">{inviteError}</p> : null}
+      {deleteFeedback ? <p role="status" className="mt-2 text-sm text-emerald-800">{t("adminEvaluations.feedback.deleted")}</p> : null}
+      {deleteError ? <p role="alert" className="mt-2 text-sm text-red-700">{t("adminEvaluations.feedback.deleteError")}: {deleteError}</p> : null}
       <div className="mt-3 flex justify-end">
         <button
           type="button"
@@ -150,12 +199,14 @@ export function EvaluationsList() {
                   ))}
                 </dl>
 
-                <Link
-                  href={`/admin/evaluaciones/${evaluation.id}`}
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 px-5 py-2.5 font-bold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200"
-                >
-                  {t("adminEvaluations.actions.viewDetail")}
-                </Link>
+                <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+                  <Link href={`/admin/evaluaciones/${evaluation.id}`} className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl bg-orange-500 px-5 py-2.5 font-bold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200">
+                    {t("adminEvaluations.actions.viewDetail")}
+                  </Link>
+                  <button type="button" onClick={() => void handleDeleteEvaluation(evaluation)} disabled={deletingId !== null} className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl border border-red-300 bg-white px-5 py-2.5 font-bold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-red-100 disabled:cursor-wait disabled:opacity-60">
+                    {deletingId === evaluation.id ? t("adminEvaluations.actions.deleting") : t("adminEvaluations.actions.deleteEvaluation")}
+                  </button>
+                </div>
               </div>
             </article>
           ))}
