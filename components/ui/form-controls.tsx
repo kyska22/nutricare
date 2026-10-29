@@ -18,6 +18,7 @@ interface SelectFieldProps<T extends FieldValues> extends BaseControlProps<T> {
   placeholder: string;
   options: ReadonlyArray<{ value: string; label: string }>;
   optional?: boolean;
+  defaultValue?: string;
 }
 
 interface InputFieldProps<T extends FieldValues> extends BaseControlProps<T> {
@@ -81,6 +82,7 @@ export function SelectField<T extends FieldValues>({
   placeholder,
   options,
   optional,
+  defaultValue,
 }: SelectFieldProps<T>) {
   return (
     <label className="block">
@@ -94,7 +96,7 @@ export function SelectField<T extends FieldValues>({
         )}
         aria-invalid={Boolean(error)}
         className={`${controlClassName} ${error ? "border-rose-400" : "border-emerald-950/15"}`}
-        defaultValue=""
+        defaultValue={defaultValue ?? ""}
       >
         <option value="" disabled>
           {placeholder}

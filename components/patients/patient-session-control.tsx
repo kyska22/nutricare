@@ -24,8 +24,11 @@ export function PatientSessionControl({
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portalHref, setPortalHref] = useState("/pacientes/acceso");
 
   useEffect(() => {
+    const currentPath = `${window.location.pathname}${window.location.search}`;
+    setPortalHref(`/pacientes/acceso?next=${encodeURIComponent(currentPath)}`);
     const supabase = createSupabaseBrowserAuthClient();
     if (!supabase) {
       setLoading(false);
@@ -54,6 +57,13 @@ export function PatientSessionControl({
       if (active) {
         setRole(nextRole);
         onRoleChange?.(nextRole);
+      }
+      const invitationToken = new URLSearchParams(window.location.search).get("invite");
+      if (active && nextRole === "patient" && invitationToken && /^[a-f0-9]{64}$/i.test(invitationToken)) {
+        const { error: claimError } = await supabase.rpc("claim_patient_history_from_invitation", {
+          p_token: invitationToken,
+        });
+        if (active && claimError) setError(t("patientAuth.linkError"));
       }
     }).catch(() => {
       if (active) setEmail(null);
@@ -88,7 +98,7 @@ export function PatientSessionControl({
 
   if (!email) {
     return (
-      <Link href="/pacientes/acceso" className={`rounded-xl px-2 py-2 text-sm font-semibold transition focus:outline-none focus:ring-4 ${variant === "dark" ? "text-emerald-50 hover:bg-white/10 focus:ring-white/15" : "text-emerald-800 hover:bg-emerald-50 focus:ring-emerald-100"}`}>
+      <Link href={portalHref} className={`rounded-xl px-2 py-2 text-sm font-semibold transition focus:outline-none focus:ring-4 ${variant === "dark" ? "text-emerald-50 hover:bg-white/10 focus:ring-white/15" : "text-emerald-800 hover:bg-emerald-50 focus:ring-emerald-100"}`}>
         {t("patientAuth.portalLink")}
       </Link>
     );
@@ -113,7 +123,7 @@ export function PatientSessionControl({
       >
         {signingOut ? t("patientAuth.signingOut") : t("patientAuth.signOut")}
       </button>
-      {error ? <span role="alert" className="w-full text-right text-xs text-rose-100">{error}</span> : null}
+      {error ? <span role="alert" className={`w-full text-right text-xs ${variant === "dark" ? "text-rose-100" : "text-rose-700"}`}>{error}</span> : null}
     </div>
   );
 }

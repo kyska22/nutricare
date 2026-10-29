@@ -30,6 +30,18 @@ function getSafeNextPath() {
   }
 }
 
+async function claimInvitationHistory(
+  supabase: NonNullable<ReturnType<typeof createSupabaseBrowserAuthClient>>,
+  destination: string,
+) {
+  const invitationToken = new URL(destination, window.location.origin).searchParams.get("invite");
+  if (!invitationToken || !/^[a-f0-9]{64}$/i.test(invitationToken)) return null;
+  const { error } = await supabase.rpc("claim_patient_history_from_invitation", {
+    p_token: invitationToken,
+  });
+  return error?.message ?? null;
+}
+
 const paths: Record<PatientAuthMode, string> = {
   signIn: "/pacientes/acceso",
   signUp: "/pacientes/registro",
@@ -59,8 +71,14 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
     if (query.has("next") && (mode === "signIn" || mode === "signUp")) {
       const supabase = createSupabaseBrowserAuthClient();
       if (supabase) {
-        void supabase.auth.getUser().then(({ data }) => {
-          if (data.user) router.replace(destination);
+        void supabase.auth.getUser().then(async ({ data }) => {
+          if (!data.user) return;
+          const claimError = await claimInvitationHistory(supabase, destination);
+          if (claimError) {
+            setError(t("patientAuth.linkError"));
+            return;
+          }
+          router.replace(destination);
         });
       }
     }
@@ -104,8 +122,13 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
         if (authError) {
           setError(t("patientAuth.invalidCredentials"));
         } else {
-          router.replace(getSafeNextPath());
-          router.refresh();
+          const destination = getSafeNextPath();
+          const claimError = await claimInvitationHistory(supabase, destination);
+          if (claimError) setError(t("patientAuth.linkError"));
+          else {
+            router.replace(destination);
+            router.refresh();
+          }
         }
       } else if (mode === "signUp") {
         const nextPath = getSafeNextPath();
@@ -119,8 +142,12 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
         });
         if (authError) setError(t("patientAuth.signUpError"));
         else if (data.session) {
-          router.replace(nextPath);
-          router.refresh();
+          const claimError = await claimInvitationHistory(supabase, nextPath);
+          if (claimError) setError(t("patientAuth.linkError"));
+          else {
+            router.replace(nextPath);
+            router.refresh();
+          }
         } else setSuccess(t("patientAuth.signUpSuccess"));
       } else if (mode === "recovery") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(

@@ -6,6 +6,7 @@ import {
   bowelFrequencies,
   consultationReasons,
   consultationTypes,
+  consultationModalities,
   exerciseFrequencies,
   exerciseTypes,
   familyHistoryConditions,
@@ -70,6 +71,7 @@ export function createNutritionAssessmentSchema(t: Translate) {
     personalInformation: z
       .object({
         consultationType: z.enum(consultationTypes).optional(),
+        consultationModality: z.enum(consultationModalities).optional(),
         firstName: optionalText,
         lastName: optionalText,
         email: z
@@ -224,6 +226,16 @@ export function createNutritionAssessmentSchema(t: Translate) {
         .number({ error: t("validation.invalidNumber") })
         .positive(t("validation.positiveNumber"))
         .optional(),
+      skinfolds: z.object({
+        bicepsMm: optionalNonnegativeNumber,
+        tricepsMm: optionalNonnegativeNumber,
+        subscapularMm: optionalNonnegativeNumber,
+        abdominalMm: optionalNonnegativeNumber,
+        supraespinalMm: optionalNonnegativeNumber,
+        suprailiacMm: optionalNonnegativeNumber,
+        thighMm: optionalNonnegativeNumber,
+        calfMm: optionalNonnegativeNumber,
+      }).optional(),
     }),
   });
 }

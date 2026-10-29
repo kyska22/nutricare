@@ -193,7 +193,11 @@ export function EvaluationsList() {
                         {t(`adminEvaluations.fields.${field}`)}
                       </dt>
                       <dd className="mt-1 font-semibold text-emerald-950">
-                        {value}
+                        {field === "patientCode" && evaluation.patientCode ? (
+                          <Link href={`/admin/pacientes/${encodeURIComponent(evaluation.patientCode)}`} className="underline decoration-emerald-300 underline-offset-4 hover:text-emerald-700">
+                            {value}
+                          </Link>
+                        ) : value}
                       </dd>
                     </div>
                   ))}

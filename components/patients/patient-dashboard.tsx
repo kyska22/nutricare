@@ -40,6 +40,13 @@ type DashboardData = {
     notes: string | null;
   }>;
   evaluations: Evaluation[];
+  appointments: Array<{
+    id: string;
+    scheduled_at: string;
+    appointment_link: string | null;
+    notes: string | null;
+    nutritionist_name: string | null;
+  }>;
 };
 
 function asDashboardData(value: unknown): DashboardData | null {
@@ -54,6 +61,7 @@ function asDashboardData(value: unknown): DashboardData | null {
     evaluations: evaluations.filter((item): item is Evaluation => Boolean(item && typeof item === "object" && typeof (item as Evaluation).id === "string")),
     packages: packages.filter((item): item is DashboardData["packages"][number] => Boolean(item && typeof item === "object" && typeof (item as DashboardData["packages"][number]).id === "string")),
     session_logs: sessionLogs.filter((item): item is DashboardData["session_logs"][number] => Boolean(item && typeof item === "object" && typeof (item as DashboardData["session_logs"][number]).id === "string")),
+    appointments: [],
   };
 }
 
@@ -135,12 +143,20 @@ export function PatientDashboard() {
         router.replace("/admin/evaluaciones");
         return;
       }
-      const { data, error: dashboardError } = await supabase.rpc("get_patient_portal_dashboard");
+      const [dashboardResult, appointmentResult] = await Promise.all([
+        supabase.rpc("get_patient_portal_dashboard"),
+        supabase.rpc("get_patient_upcoming_appointments"),
+      ]);
       if (!active) return;
-      if (dashboardError) setError(t("patientPortal.loadError"));
+      if (dashboardResult.error) setError(t("patientPortal.loadError"));
       else {
-        const parsed = asDashboardData(data);
-        if (parsed) setDashboard(parsed);
+        const parsed = asDashboardData(dashboardResult.data);
+        if (parsed) {
+          const appointments = Array.isArray(appointmentResult.data)
+            ? appointmentResult.data.filter((item): item is DashboardData["appointments"][number] => Boolean(item && typeof item === "object" && typeof (item as DashboardData["appointments"][number]).id === "string"))
+            : [];
+          setDashboard({ ...parsed, appointments });
+        }
         else setError(t("patientPortal.loadError"));
       }
       setLoading(false);
@@ -164,6 +180,7 @@ export function PatientDashboard() {
     ? t("patientPortal.notAvailable")
     : `${new Intl.NumberFormat(localeTag, { maximumFractionDigits: 1 }).format(value)}${unit}`;
   const formatDate = (value: string) => new Intl.DateTimeFormat(localeTag, { dateStyle: "medium" }).format(new Date(value));
+  const formatDateTime = (value: string) => new Intl.DateTimeFormat(localeTag, { dateStyle: "full", timeStyle: "short" }).format(new Date(value));
   const review = latest?.professional_review ?? {};
   const mealPlan = typeof review.mealPlan === "string" ? review.mealPlan.trim() : "";
   const recommendations = latest?.recommendations || (typeof review.recommendations === "string" ? review.recommendations.trim() : "");
@@ -210,6 +227,14 @@ export function PatientDashboard() {
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.sessionsUsed")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{sessions.used}<span className="text-base font-semibold text-slate-500"> / {sessions.total}</span></p><div className="mt-3 h-2 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-700" style={{ width: `${sessions.total ? Math.min(sessions.used / sessions.total * 100, 100) : 0}%` }} /></div></article>
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.remainingSessions")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{sessions.remaining}</p></article>
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.latestCalories")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{formatNumber(latest?.total_energy_kcal, " kcal")}</p><p className="mt-1 text-xs text-slate-500">{latest ? formatDate(latest.evaluation_date) : ""}</p></article>
+          </section>
+
+          <section className="mt-5 rounded-3xl border border-orange-200 bg-orange-50 p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5 sm:p-6">
+            <div>
+              <h2 className="font-bold text-emerald-950">{t("patientPortal.nextAppointment")}</h2>
+              {dashboard.appointments[0] ? <><p className="mt-1 text-lg font-bold text-emerald-900">{formatDateTime(dashboard.appointments[0].scheduled_at)}</p>{dashboard.appointments[0].nutritionist_name ? <p className="mt-1 text-sm text-slate-600">{dashboard.appointments[0].nutritionist_name}</p> : null}{dashboard.appointments[0].notes ? <p className="mt-1 text-sm text-slate-700">{dashboard.appointments[0].notes}</p> : null}</> : <p className="mt-1 text-sm text-slate-600">{t("patientPortal.noAppointment")}</p>}
+            </div>
+            {dashboard.appointments[0]?.appointment_link ? <a href={dashboard.appointments[0].appointment_link} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600 sm:mt-0">{t("patientPortal.openAppointment")}</a> : null}
           </section>
 
           <section className="mt-6 grid gap-4 lg:grid-cols-2">

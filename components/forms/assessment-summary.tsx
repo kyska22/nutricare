@@ -9,6 +9,8 @@ import {
 } from "@/lib/supabase";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
 import { PatientSessionControl } from "@/components/patients/patient-session-control";
+import { TwoWeekMenuSection } from "@/components/reports/two-week-menu-section";
+import { emptyTwoWeekMenu, menuDays, menuMeals } from "@/lib/reports/two-week-menu";
 
 interface AssessmentSummaryProps {
   data: NutritionAssessmentFormValues;
@@ -27,6 +29,11 @@ interface ReviewFields {
   nutritionistObservations: string;
   recommendations: string;
   followUpPlan: string;
+  energyAndMacros: string;
+  metabolicStrategy: string;
+  healthyRecipes: string;
+  twoWeekMenu: ReturnType<typeof emptyTwoWeekMenu>;
+  activityPlan: string;
 }
 
 function ReportSection({ title, rows }: ReportSectionProps) {
@@ -56,27 +63,37 @@ function ReviewTextarea({
   placeholder,
   value,
   onChange,
+  editable,
+  emptyText,
 }: {
   label: string;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  editable: boolean;
+  emptyText: string;
 }) {
   return (
     <label className="report-section block rounded-2xl border border-emerald-950/10 bg-white p-5 sm:p-6">
       <span className="text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">
         {label}
       </span>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        rows={5}
-        className="mt-4 min-h-32 w-full resize-y rounded-xl border border-emerald-950/15 bg-emerald-50/30 px-4 py-3 text-[15px] leading-6 text-emerald-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
-      />
-      <div className="print-only mt-3 hidden whitespace-pre-wrap text-sm leading-6 text-emerald-950">
-        {value || placeholder}
-      </div>
+      {editable ? (
+        <>
+          <textarea
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder}
+            rows={5}
+            className="mt-4 min-h-32 w-full resize-y rounded-xl border border-emerald-950/15 bg-emerald-50/30 px-4 py-3 text-[15px] leading-6 text-emerald-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+          />
+          <div className="print-only mt-3 hidden whitespace-pre-wrap text-sm leading-6 text-emerald-950">
+            {value || emptyText}
+          </div>
+        </>
+      ) : (
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-emerald-950">{value || emptyText}</p>
+      )}
     </label>
   );
 }
@@ -89,10 +106,17 @@ export function AssessmentSummary({
   onReset,
 }: AssessmentSummaryProps) {
   const { locale, t } = useI18n();
+  const [sessionRole, setSessionRole] = useState<"patient" | "nutritionist" | null>(null);
+  const canEditProfessionalReport = sessionRole === "nutritionist";
   const [review, setReview] = useState<ReviewFields>({
     nutritionistObservations: "",
     recommendations: "",
     followUpPlan: "",
+    energyAndMacros: "",
+    metabolicStrategy: "",
+    healthyRecipes: "",
+    twoWeekMenu: emptyTwoWeekMenu(),
+    activityPlan: "",
   });
   const [feedback, setFeedback] = useState<"copied" | "saved" | null>(
     null,
@@ -458,6 +482,24 @@ export function AssessmentSummary({
       label: t("professionalReport.fields.associatedRisk"),
       value: riskLevel,
     },
+    ...([
+      ["bicepsMm", "biceps"],
+      ["tricepsMm", "triceps"],
+      ["subscapularMm", "subscapular"],
+      ["abdominalMm", "abdominal"],
+      ["supraespinalMm", "supraespinal"],
+      ["suprailiacMm", "suprailiac"],
+      ["thighMm", "thigh"],
+      ["calfMm", "calf"],
+    ] as const)
+      .filter(([key]) => data.anthropometrics.skinfolds?.[key] !== undefined)
+      .map(([key, label]) => {
+        const value = data.anthropometrics.skinfolds?.[key];
+        return {
+          label: t(`anthropometry.skinfolds.${label}`),
+          value: value === undefined ? notProvided : withUnit(value, "mm"),
+        };
+      }),
   ];
 
   const compositionRows = [
@@ -495,6 +537,16 @@ export function AssessmentSummary({
         : notProvided,
     },
   ];
+
+  const energyRequirementRows = [
+    { label: t("calculations.restingEnergy"), value: optionalNumber(assessment.restingEnergyExpenditure.valueKcal, t("units.kcal")) },
+    { label: t("calculations.totalEnergy"), value: assessment.totalEnergyExpenditure ? optionalNumber(assessment.totalEnergyExpenditure.valueKcal, t("units.kcal")) : notProvided },
+  ];
+
+  const menuPlanText = menuDays.map((day, index) => [
+    t("nutritionReport.menu.day", { count: index + 1 }),
+    ...menuMeals.map((meal) => `${t(`nutritionReport.menu.meals.${meal}`)}: ${review.twoWeekMenu[day]?.[meal] || notProvided}`),
+  ].join("\n")).join("\n\n");
 
   const buildReportText = () => {
     const sectionText = (title: string, rows: ReportSectionProps["rows"]) =>
@@ -542,6 +594,12 @@ export function AssessmentSummary({
         t("professionalReport.sections.bodyComposition"),
         compositionRows,
       ),
+      sectionText(t("nutritionReport.sections.energyAndMacros"), energyRequirementRows),
+      `${t("nutritionReport.sections.energyAndMacrosPrescription")}\n${review.energyAndMacros || notProvided}`,
+      `${t("nutritionReport.sections.metabolicStrategy")}\n${review.metabolicStrategy || notProvided}`,
+      `${t("nutritionReport.sections.healthyRecipes")}\n${review.healthyRecipes || notProvided}`,
+      `${t("nutritionReport.sections.menuPlan")}\n${menuPlanText}`,
+      `${t("nutritionReport.sections.activityPlan")}\n${review.activityPlan || notProvided}`,
       `${t("professionalReport.sections.automaticObservations")}\n${automaticObservations
         .map((item) => `- ${item}`)
         .join("\n")}`,
@@ -644,7 +702,7 @@ export function AssessmentSummary({
               </p>
             </div>
             <div className="flex flex-col items-end gap-3">
-              <PatientSessionControl />
+              <PatientSessionControl onRoleChange={setSessionRole} />
               <span className="w-fit rounded-full border border-amber-200/50 bg-amber-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-amber-950">
                 {t("professionalReport.status")}
               </span>
@@ -697,6 +755,7 @@ export function AssessmentSummary({
             title={t("professionalReport.sections.bodyComposition")}
             rows={compositionRows}
           />
+          <ReportSection title={t("nutritionReport.sections.energyAndMacros")} rows={energyRequirementRows} />
 
           <section className="report-section rounded-2xl border border-emerald-950/10 bg-white p-5 sm:p-6">
             <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
@@ -719,9 +778,49 @@ export function AssessmentSummary({
           </section>
 
           <ReviewTextarea
+            label={t("nutritionReport.sections.energyAndMacrosPrescription")}
+            placeholder={t("nutritionReport.placeholders.energyAndMacros")}
+            value={review.energyAndMacros}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
+            onChange={(value) => setReview((current) => ({ ...current, energyAndMacros: value }))}
+          />
+          <ReviewTextarea
+            label={t("nutritionReport.sections.metabolicStrategy")}
+            placeholder={t("nutritionReport.placeholders.metabolicStrategy")}
+            value={review.metabolicStrategy}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
+            onChange={(value) => setReview((current) => ({ ...current, metabolicStrategy: value }))}
+          />
+          <ReviewTextarea
+            label={t("nutritionReport.sections.healthyRecipes")}
+            placeholder={t("nutritionReport.placeholders.healthyRecipes")}
+            value={review.healthyRecipes}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
+            onChange={(value) => setReview((current) => ({ ...current, healthyRecipes: value }))}
+          />
+          <TwoWeekMenuSection
+            value={review.twoWeekMenu}
+            editing={canEditProfessionalReport}
+            onChange={(twoWeekMenu) => setReview((current) => ({ ...current, twoWeekMenu }))}
+            missingText={notProvided}
+          />
+          <ReviewTextarea
+            label={t("nutritionReport.sections.activityPlan")}
+            placeholder={t("nutritionReport.placeholders.activityPlan")}
+            value={review.activityPlan}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
+            onChange={(value) => setReview((current) => ({ ...current, activityPlan: value }))}
+          />
+          <ReviewTextarea
             label={t("professionalReport.sections.nutritionistObservations")}
             placeholder={t("professionalReport.placeholders.nutritionistObservations")}
             value={review.nutritionistObservations}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
             onChange={(value) =>
               setReview((current) => ({
                 ...current,
@@ -733,6 +832,8 @@ export function AssessmentSummary({
             label={t("professionalReport.sections.recommendations")}
             placeholder={t("professionalReport.placeholders.recommendations")}
             value={review.recommendations}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
             onChange={(value) =>
               setReview((current) => ({ ...current, recommendations: value }))
             }
@@ -741,6 +842,8 @@ export function AssessmentSummary({
             label={t("professionalReport.sections.followUpPlan")}
             placeholder={t("professionalReport.placeholders.followUpPlan")}
             value={review.followUpPlan}
+            editable={canEditProfessionalReport}
+            emptyText={notProvided}
             onChange={(value) =>
               setReview((current) => ({ ...current, followUpPlan: value }))
             }

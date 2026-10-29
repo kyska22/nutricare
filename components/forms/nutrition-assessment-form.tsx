@@ -47,6 +47,7 @@ const emptyValues = {
   },
   personalInformation: {
     consultationType: undefined,
+    consultationModality: "online",
     firstName: "",
     lastName: "",
     email: "",
@@ -116,6 +117,16 @@ const emptyValues = {
     heightMeters: "",
     abdominalCircumferenceCm: "",
     hipCircumferenceCm: "",
+    skinfolds: {
+      bicepsMm: "",
+      tricepsMm: "",
+      subscapularMm: "",
+      abdominalMm: "",
+      supraespinalMm: "",
+      suprailiacMm: "",
+      thighMm: "",
+      calfMm: "",
+    },
   },
 };
 
@@ -173,6 +184,9 @@ export function NutritionAssessmentForm() {
   const onSubmit = (data: NutritionAssessmentFormValues) => {
     // Future integration point: persist the assessment in the database.
     // Future integration point: generate meal plans after professional review.
+    if (data.personalInformation?.consultationModality !== "inPerson") {
+      data.anthropometrics.skinfolds = undefined;
+    }
     const assessment = calculateAnthropometricAssessment({
       sex: data.anthropometrics.sex,
       age: data.anthropometrics.age,
@@ -388,7 +402,12 @@ export function NutritionAssessmentForm() {
             errors={errors}
             watch={watch}
           />
-          <AnthropometricsSection register={register} errors={errors} />
+          <AnthropometricsSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            isNutritionist={sessionRole === "nutritionist"}
+          />
 
           <div className="sticky bottom-3 z-10 flex justify-end rounded-2xl border border-emerald-900/10 bg-white/90 p-3 shadow-xl shadow-emerald-950/10 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
             <button

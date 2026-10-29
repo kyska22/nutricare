@@ -107,6 +107,12 @@ export function AdminShell({ title, subtitle, children }: AdminShellProps) {
           >
             {t("adminNavigation.settings")}
           </Link>
+          <Link
+            href="/admin/pacientes/asociar"
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-100 bg-white px-4 py-2.5 text-sm font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+          >
+            {t("adminNavigation.associatePatient")}
+          </Link>
         </nav>
 
         {children}

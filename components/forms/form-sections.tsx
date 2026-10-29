@@ -18,6 +18,7 @@ interface SectionProps {
   register: UseFormRegister<NutritionAssessmentFormValues>;
   errors: FieldErrors<NutritionAssessmentFormValues>;
   watch?: UseFormWatch<NutritionAssessmentFormValues>;
+  isNutritionist?: boolean;
 }
 
 const mapOptions = (
@@ -345,9 +346,16 @@ export function RecallSection({ register, errors }: SectionProps) {
   );
 }
 
-export function AnthropometricsSection({ register, errors }: SectionProps) {
+export function AnthropometricsSection({
+  register,
+  errors,
+  watch,
+  isNutritionist = false,
+}: SectionProps & { isNutritionist?: boolean }) {
   const { t } = useI18n();
   const sectionErrors = errors.anthropometrics;
+  const consultationModality = watch?.("personalInformation.consultationModality") ?? "online";
+  const showSkinfolds = isNutritionist && consultationModality === "inPerson";
 
   return (
     <FormSection
@@ -356,6 +364,19 @@ export function AnthropometricsSection({ register, errors }: SectionProps) {
       description={t("sections.anthropometrics.description")}
     >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {isNutritionist ? (
+          <SelectField
+            name="personalInformation.consultationModality"
+            label={t("clinicalHistory.fields.consultationModality")}
+            register={register}
+            placeholder={t("placeholders.select")}
+            defaultValue="online"
+            options={[
+              { value: "online", label: t("clinicalHistory.options.consultationModality.online") },
+              { value: "inPerson", label: t("clinicalHistory.options.consultationModality.inPerson") },
+            ]}
+          />
+        ) : null}
         <InputField
           name="anthropometrics.weightKg"
           label={t("fields.weightKg")}
@@ -404,6 +425,41 @@ export function AnthropometricsSection({ register, errors }: SectionProps) {
           unit={t("units.centimeters")}
         />
       </div>
+      {showSkinfolds ? (
+        <div className="mt-8 border-t border-emerald-900/10 pt-6">
+          <h3 className="text-lg font-bold text-emerald-950">
+            {t("anthropometry.skinfoldsTitle")}
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            {t("anthropometry.skinfoldsDescription")}
+          </p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {([
+              ["bicepsMm", "biceps"],
+              ["tricepsMm", "triceps"],
+              ["subscapularMm", "subscapular"],
+              ["abdominalMm", "abdominal"],
+              ["supraespinalMm", "supraespinal"],
+              ["suprailiacMm", "suprailiac"],
+              ["thighMm", "thigh"],
+              ["calfMm", "calf"],
+            ] as const).map(([key, label]) => (
+              <InputField
+                key={key}
+                name={`anthropometrics.skinfolds.${key}` as const}
+                label={t(`anthropometry.skinfolds.${label}`)}
+                register={register}
+                error={sectionErrors?.skinfolds?.[key]}
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="mm"
+                unit="mm"
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </FormSection>
   );
 }

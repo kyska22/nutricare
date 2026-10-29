@@ -1,9 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "./admin-shell";
+import { PatientSessionEditor } from "./patient-session-editor";
+import { TwoWeekMenuSection } from "@/components/reports/two-week-menu-section";
 import { useI18n } from "@/lib/i18n/i18n-provider";
+import { emptyTwoWeekMenu, normalizeTwoWeekMenu } from "@/lib/reports/two-week-menu";
 import {
   EvaluationDetailRecord,
   getEvaluationById,
@@ -24,6 +28,11 @@ interface ReviewDraft {
   lifestylePlan: string;
   recommendations: string;
   followUpPlan: string;
+  energyAndMacros: string;
+  metabolicStrategy: string;
+  healthyRecipes: string;
+  twoWeekMenu: ReturnType<typeof emptyTwoWeekMenu>;
+  activityPlan: string;
 }
 
 function asObject(value: unknown): DataObject | null {
@@ -122,6 +131,11 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
     lifestylePlan: "",
     recommendations: "",
     followUpPlan: "",
+    energyAndMacros: "",
+    metabolicStrategy: "",
+    healthyRecipes: "",
+    twoWeekMenu: emptyTwoWeekMenu(),
+    activityPlan: "",
   });
 
   useEffect(() => {
@@ -188,6 +202,11 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
         "",
       followUpPlan:
         evaluation.followUpPlan ?? asString(storedReview?.followUpPlan) ?? "",
+      energyAndMacros: asString(storedReview?.energyAndMacros) ?? "",
+      metabolicStrategy: asString(storedReview?.metabolicStrategy) ?? "",
+      healthyRecipes: asString(storedReview?.healthyRecipes) ?? "",
+      twoWeekMenu: normalizeTwoWeekMenu(storedReview?.twoWeekMenu),
+      activityPlan: asString(storedReview?.activityPlan) ?? "",
     });
   }, [evaluation, storedReview]);
 
@@ -229,6 +248,7 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
   const dietaryHabits = asObject(clinicalData?.dietaryHabits);
   const recall = asObject(clinicalData?.recall24Hours);
   const anthropometrics = asObject(clinicalData?.anthropometrics);
+  const skinfolds = asObject(anthropometrics?.skinfolds);
   const weeklyFrequency = asObject(dietaryHabits?.weeklyFrequency);
   const bmi = asObject(assessment?.bmi);
   const waistHip = asObject(assessment?.waistHipRatio);
@@ -254,6 +274,11 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
         "",
       followUpPlan:
         evaluation?.followUpPlan ?? asString(storedReview?.followUpPlan) ?? "",
+      energyAndMacros: asString(storedReview?.energyAndMacros) ?? "",
+      metabolicStrategy: asString(storedReview?.metabolicStrategy) ?? "",
+      healthyRecipes: asString(storedReview?.healthyRecipes) ?? "",
+      twoWeekMenu: normalizeTwoWeekMenu(storedReview?.twoWeekMenu),
+      activityPlan: asString(storedReview?.activityPlan) ?? "",
     });
   };
 
@@ -312,6 +337,15 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
             evaluation.consultationType,
           ),
         },
+        ...(personalInformation?.consultationModality
+          ? [{
+              label: t("clinicalHistory.fields.consultationModality"),
+              value: translate(
+                "clinicalHistory.options.consultationModality",
+                personalInformation.consultationModality,
+              ),
+            }]
+          : []),
         { label: t("adminEvaluations.fields.age"), value: formatNumber(evaluation.age) },
         {
           label: t("adminEvaluations.fields.sex"),
@@ -448,6 +482,21 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
         { label: t("fields.heightMeters"), value: formatNumber(anthropometrics?.heightMeters ?? evaluation?.heightM, " m") },
         { label: t("fields.abdominalCircumferenceCm"), value: formatNumber(anthropometrics?.abdominalCircumferenceCm ?? evaluation?.waistCm, " cm") },
         { label: t("fields.hipCircumferenceCm"), value: formatNumber(anthropometrics?.hipCircumferenceCm ?? evaluation?.hipCm, " cm") },
+        ...([
+          ["bicepsMm", "biceps"],
+          ["tricepsMm", "triceps"],
+          ["subscapularMm", "subscapular"],
+          ["abdominalMm", "abdominal"],
+          ["supraespinalMm", "supraespinal"],
+          ["suprailiacMm", "suprailiac"],
+          ["thighMm", "thigh"],
+          ["calfMm", "calf"],
+        ] as const)
+          .filter(([key]) => skinfolds?.[key] !== undefined)
+          .map(([key, label]) => ({
+            label: t(`anthropometry.skinfolds.${label}`),
+            value: formatNumber(skinfolds?.[key], " mm"),
+          })),
       ],
     },
   ];
@@ -461,6 +510,9 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
     { label: t("calculations.fatMass"), value: formatNumber(composition?.fatMassKg ?? evaluation?.fatMassKg, " kg") },
     { label: t("calculations.fatFreeMass"), value: formatNumber(composition?.fatFreeMassKg ?? evaluation?.fatFreeMassKg, " kg") },
     { label: t("calculations.muscleMass"), value: formatNumber(composition?.muscleMassKg ?? evaluation?.muscleMassKg, " kg") },
+  ];
+
+  const energyRows: InfoRow[] = [
     { label: t("calculations.restingEnergy"), value: formatNumber(restingEnergy?.valueKcal ?? evaluation?.restingEnergyKcal, " kcal") },
     { label: t("calculations.totalEnergy"), value: formatNumber(totalEnergy?.valueKcal ?? evaluation?.totalEnergyKcal, " kcal") },
   ];
@@ -578,7 +630,7 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
                 <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
                   {t("adminEvaluations.fields.patientCode")}
                 </p>
-                <p className="mt-1 text-lg font-bold text-emerald-950">{evaluation?.patientCode || missing}</p>
+                <p className="mt-1 text-lg font-bold text-emerald-950">{evaluation?.patientCode ? <Link href={`/admin/pacientes/${encodeURIComponent(evaluation.patientCode)}`} className="underline decoration-emerald-400 underline-offset-4 hover:text-emerald-700">{evaluation.patientCode}</Link> : missing}</p>
                 <p className="mt-3 text-xs text-slate-600">
                   {new Intl.DateTimeFormat(localeTag, { dateStyle: "long" }).format(new Date(evaluation?.evaluationDate ?? Date.now()))}
                 </p>
@@ -595,6 +647,7 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
               </div>
             </div>
           </section>
+          {evaluation.patientCode ? <PatientSessionEditor patientCode={evaluation.patientCode} /> : null}
           <div className="lg:col-span-2">
             <ClinicalCard
               title={t("adminEvaluations.sections.general")}
@@ -612,6 +665,47 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
               rows={resultRows}
             />
           </div>
+          <div className="lg:col-span-2">
+            <ClinicalCard title={t("nutritionReport.sections.energyAndMacros")} rows={energyRows} />
+          </div>
+          <ReviewCard
+            title={t("nutritionReport.sections.energyAndMacrosPrescription")}
+            value={draft.energyAndMacros}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, energyAndMacros: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.metabolicStrategy")}
+            value={draft.metabolicStrategy}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, metabolicStrategy: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.healthyRecipes")}
+            value={draft.healthyRecipes}
+            editing={editing}
+            rows={10}
+            onChange={(value) => setDraft((current) => ({ ...current, healthyRecipes: value }))}
+            emptyText={missing}
+          />
+          <TwoWeekMenuSection
+            value={draft.twoWeekMenu}
+            editing={editing}
+            onChange={(twoWeekMenu) => setDraft((current) => ({ ...current, twoWeekMenu }))}
+            missingText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.activityPlan")}
+            value={draft.activityPlan}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, activityPlan: value }))}
+            emptyText={missing}
+          />
 
           <section className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-lg shadow-emerald-950/5 sm:p-6 lg:col-span-2">
             <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.14em] text-emerald-800">
@@ -633,6 +727,44 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
             )}
           </section>
 
+          <ReviewCard
+            title={t("nutritionReport.sections.energyAndMacrosPrescription")}
+            value={draft.energyAndMacros}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, energyAndMacros: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.metabolicStrategy")}
+            value={draft.metabolicStrategy}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, metabolicStrategy: value }))}
+            emptyText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.healthyRecipes")}
+            value={draft.healthyRecipes}
+            editing={editing}
+            rows={10}
+            onChange={(value) => setDraft((current) => ({ ...current, healthyRecipes: value }))}
+            emptyText={missing}
+          />
+          <TwoWeekMenuSection
+            value={draft.twoWeekMenu}
+            editing={editing}
+            onChange={(twoWeekMenu) => setDraft((current) => ({ ...current, twoWeekMenu }))}
+            missingText={missing}
+          />
+          <ReviewCard
+            title={t("nutritionReport.sections.activityPlan")}
+            value={draft.activityPlan}
+            editing={editing}
+            rows={8}
+            onChange={(value) => setDraft((current) => ({ ...current, activityPlan: value }))}
+            emptyText={missing}
+          />
           <ReviewCard
             title={t("adminEvaluations.sections.nutritionDiagnosis")}
             value={draft.nutritionDiagnosis}

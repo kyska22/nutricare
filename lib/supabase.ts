@@ -2,6 +2,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { AnthropometricAssessment } from "@/lib/calculations";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
+import { TwoWeekMenu } from "@/lib/reports/two-week-menu";
 
 export type SupabaseResult<T> =
   | { status: "success"; data: T }
@@ -108,6 +109,24 @@ export interface EvaluationDetailRecord extends EvaluationListItem {
   createdAt: string;
 }
 
+export interface PatientSessionPackage {
+  id: string;
+  patient_id: string;
+  total_sessions: number;
+  used_sessions: number;
+  remaining_sessions: number;
+  status: string;
+}
+
+export interface PatientAppointment {
+  id: string;
+  scheduled_at: string;
+  appointment_link: string | null;
+  notes: string | null;
+  status?: string;
+  nutritionist_name?: string | null;
+}
+
 export interface ProfessionalReviewInput {
   nutritionistObservations: string;
   recommendations: string;
@@ -116,6 +135,11 @@ export interface ProfessionalReviewInput {
   goalsAndPrescription?: string;
   mealPlan?: string;
   lifestylePlan?: string;
+  energyAndMacros?: string;
+  metabolicStrategy?: string;
+  healthyRecipes?: string;
+  twoWeekMenu?: TwoWeekMenu;
+  activityPlan?: string;
 }
 
 interface SaveEvaluationInput {
@@ -653,6 +677,11 @@ export async function updateEvaluationReview(
       goalsAndPrescription: review.goalsAndPrescription ?? "",
       mealPlan: review.mealPlan ?? "",
       lifestylePlan: review.lifestylePlan ?? "",
+      energyAndMacros: review.energyAndMacros ?? "",
+      metabolicStrategy: review.metabolicStrategy ?? "",
+      healthyRecipes: review.healthyRecipes ?? "",
+      twoWeekMenu: review.twoWeekMenu ?? {},
+      activityPlan: review.activityPlan ?? "",
     },
   };
 
@@ -725,6 +754,109 @@ export async function deleteEvaluation(
   }
 }
 
+export async function getPatientSessionPackage(
+  patientCode: string,
+): Promise<SupabaseResult<PatientSessionPackage | null>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+    const { data, error } = await supabase.rpc("get_patient_session_package", {
+      p_patient_code: patientCode,
+    });
+    if (error) return { status: "error", error: error.message };
+    return { status: "success", data: data as PatientSessionPackage | null };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function setPatientRemainingSessions(
+  patientCode: string,
+  remainingSessions: number,
+): Promise<SupabaseResult<PatientSessionPackage>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+    const { data, error } = await supabase.rpc("set_patient_remaining_sessions", {
+      p_patient_code: patientCode,
+      p_remaining_sessions: remainingSessions,
+    });
+    if (error) return { status: "error", error: error.message };
+    return { status: "success", data: data as PatientSessionPackage };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function associatePatientWithCurrentNutritionist(
+  patientCode: string,
+): Promise<SupabaseResult<{ patient_code: string; linked_evaluations: number }>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+    const { data, error } = await supabase.rpc("associate_patient_with_current_nutritionist", {
+      p_patient_code: patientCode,
+    });
+    if (error) return { status: "error", error: error.message };
+    return { status: "success", data: data as { patient_code: string; linked_evaluations: number } };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function getNutritionistPatientOverview(
+  patientCode: string,
+): Promise<SupabaseResult<unknown>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+    const { data, error } = await supabase.rpc("get_nutritionist_patient_overview", {
+      p_patient_code: patientCode,
+    });
+    if (error) return { status: "error", error: error.message };
+    return { status: "success", data };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
+export async function schedulePatientAppointment(input: {
+  patientCode: string;
+  scheduledAt: string;
+  appointmentLink?: string;
+  notes?: string;
+}): Promise<SupabaseResult<PatientAppointment>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "not_configured" };
+
+  try {
+    const nutritionistResult = await getCurrentNutritionist(supabase);
+    if (nutritionistResult.status !== "success") return nutritionistResult;
+    const { data, error } = await supabase.rpc("schedule_patient_appointment", {
+      p_patient_code: input.patientCode,
+      p_scheduled_at: input.scheduledAt,
+      p_appointment_link: input.appointmentLink?.trim() || null,
+      p_notes: input.notes?.trim() || null,
+    });
+    if (error) return { status: "error", error: error.message };
+    return { status: "success", data: data as PatientAppointment };
+  } catch (error) {
+    return { status: "error", error: toErrorMessage(error) };
+  }
+}
+
 function generatePatientCode() {
   const randomValues = new Uint32Array(2);
 
@@ -753,6 +885,7 @@ export function buildAnonymizedRawResults(
     clinicalData: {
       personalInformation: {
         consultationType: personalInformation?.consultationType ?? null,
+        consultationModality: personalInformation?.consultationModality ?? "online",
         sex: personalInformation?.sex ?? formData.anthropometrics.sex,
         consultationReasons: personalInformation?.consultationReasons ?? [],
         otherConsultationReason:

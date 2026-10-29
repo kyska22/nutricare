@@ -48,6 +48,8 @@ export type TimePeriod = "AM" | "PM";
 
 export const consultationTypes = ["firstTime", "followUp"] as const;
 export type ConsultationType = (typeof consultationTypes)[number];
+export const consultationModalities = ["online", "inPerson"] as const;
+export type ConsultationModality = (typeof consultationModalities)[number];
 
 export const consultationReasons = [
   "weightLoss",
@@ -147,6 +149,7 @@ export interface NutritionAssessmentFormValues {
   };
   personalInformation?: {
     consultationType?: ConsultationType;
+    consultationModality?: ConsultationModality;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -216,5 +219,15 @@ export interface NutritionAssessmentFormValues {
     heightMeters: number;
     abdominalCircumferenceCm: number;
     hipCircumferenceCm?: number;
+    skinfolds?: {
+      bicepsMm?: number;
+      tricepsMm?: number;
+      subscapularMm?: number;
+      abdominalMm?: number;
+      supraespinalMm?: number;
+      suprailiacMm?: number;
+      thighMm?: number;
+      calfMm?: number;
+    };
   };
 }
