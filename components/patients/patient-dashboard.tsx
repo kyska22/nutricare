@@ -119,12 +119,56 @@ export function PatientDashboard() {
 
   useEffect(() => {
     let active = true;
+    let patientReady = false;
+    let refreshing = false;
     const supabase = createSupabaseBrowserAuthClient();
     if (!supabase) {
       setError(t("patientPortal.notConfigured"));
       setLoading(false);
       return;
     }
+
+    const refreshDashboard = async () => {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        const [dashboardResult, appointmentResult] = await Promise.all([
+          supabase.rpc("get_patient_portal_dashboard"),
+          supabase.rpc("get_patient_upcoming_appointments"),
+        ]);
+        if (!active) return;
+        if (dashboardResult.error) {
+          setError(t("patientPortal.loadError"));
+          return;
+        }
+        const parsed = asDashboardData(dashboardResult.data);
+        if (!parsed) {
+          setError(t("patientPortal.loadError"));
+          return;
+        }
+        if (appointmentResult.error) {
+          console.error("[patient-dashboard] Upcoming appointments failed:", appointmentResult.error.message);
+        }
+        const appointments = Array.isArray(appointmentResult.data)
+          ? appointmentResult.data.filter((item): item is DashboardData["appointments"][number] => Boolean(item && typeof item === "object" && typeof (item as DashboardData["appointments"][number]).id === "string"))
+          : [];
+        setDashboard({ ...parsed, appointments });
+        setError("");
+      } finally {
+        refreshing = false;
+        if (active) setLoading(false);
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      if (patientReady && document.visibilityState === "visible") {
+        void refreshDashboard().catch(() => {
+          if (active) setError(t("patientPortal.loadError"));
+        });
+      }
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
 
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -143,23 +187,8 @@ export function PatientDashboard() {
         router.replace("/admin/evaluaciones");
         return;
       }
-      const [dashboardResult, appointmentResult] = await Promise.all([
-        supabase.rpc("get_patient_portal_dashboard"),
-        supabase.rpc("get_patient_upcoming_appointments"),
-      ]);
-      if (!active) return;
-      if (dashboardResult.error) setError(t("patientPortal.loadError"));
-      else {
-        const parsed = asDashboardData(dashboardResult.data);
-        if (parsed) {
-          const appointments = Array.isArray(appointmentResult.data)
-            ? appointmentResult.data.filter((item): item is DashboardData["appointments"][number] => Boolean(item && typeof item === "object" && typeof (item as DashboardData["appointments"][number]).id === "string"))
-            : [];
-          setDashboard({ ...parsed, appointments });
-        }
-        else setError(t("patientPortal.loadError"));
-      }
-      setLoading(false);
+      patientReady = true;
+      await refreshDashboard();
     })().catch(() => {
       if (active) {
         setError(t("patientPortal.loadError"));
@@ -167,14 +196,23 @@ export function PatientDashboard() {
       }
     });
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [router, t]);
 
   const latest = dashboard?.evaluations.at(-1) ?? null;
   const sessions = useMemo(() => ({
     total: dashboard?.packages.reduce((sum, item) => sum + Number(item.total_sessions || 0), 0) ?? 0,
     used: dashboard?.packages.reduce((sum, item) => sum + Number(item.used_sessions || 0), 0) ?? 0,
-    remaining: dashboard?.packages.reduce((sum, item) => sum + Number(item.remaining_sessions || 0), 0) ?? 0,
+    reserved: dashboard?.appointments.length ?? 0,
+    remaining: Math.max(
+      (dashboard?.packages.reduce((sum, item) => sum + Number(item.remaining_sessions || 0), 0) ?? 0) -
+        (dashboard?.appointments.length ?? 0),
+      0,
+    ),
   }), [dashboard]);
   const formatNumber = (value: number | null | undefined, unit = "") => value == null
     ? t("patientPortal.notAvailable")
@@ -225,7 +263,7 @@ export function PatientDashboard() {
           <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.patientCode")}</p><p className="mt-2 break-all text-xl font-bold text-emerald-900">{dashboard.patient_code}</p></article>
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.sessionsUsed")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{sessions.used}<span className="text-base font-semibold text-slate-500"> / {sessions.total}</span></p><div className="mt-3 h-2 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-700" style={{ width: `${sessions.total ? Math.min(sessions.used / sessions.total * 100, 100) : 0}%` }} /></div></article>
-            <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.remainingSessions")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{sessions.remaining}</p></article>
+            <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.remainingSessions")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{sessions.remaining}</p><p className="mt-1 text-xs text-slate-500">{t("patientPortal.reservedSessions", { count: sessions.reserved })}</p></article>
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{t("patientPortal.latestCalories")}</p><p className="mt-2 text-3xl font-bold text-emerald-900">{formatNumber(latest?.total_energy_kcal, " kcal")}</p><p className="mt-1 text-xs text-slate-500">{latest ? formatDate(latest.evaluation_date) : ""}</p></article>
           </section>
 

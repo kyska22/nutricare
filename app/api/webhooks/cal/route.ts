@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
 
   const organizer = record(payload.organizer);
   const hostEmail = email(organizer?.email);
+  const videoCallData = record(payload.videoCallData);
   const attendees = Array.isArray(payload.attendees) ? payload.attendees : [];
   const attendee = attendees.map(record).find((item) => email(item?.email));
   const patientEmail = email(attendee?.email);
@@ -68,15 +69,22 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase.rpc("sync_cal_patient_appointment", {
     p_trigger_event: event,
     p_booking_uid: bookingUid,
-    p_rescheduled_from_uid: typeof payload.rescheduledFromUid === "string" ? payload.rescheduledFromUid : null,
+    p_rescheduled_from_uid: typeof payload.rescheduleUid === "string"
+      ? payload.rescheduleUid
+      : typeof payload.rescheduledFromUid === "string" ? payload.rescheduledFromUid : null,
     p_patient_email: patientEmail,
     p_nutritionist_email: hostEmail,
     p_scheduled_at: scheduledAt || null,
-    p_appointment_link: typeof payload.meetingUrl === "string" && payload.meetingUrl.startsWith("https://") ? payload.meetingUrl : null,
+    p_appointment_link: typeof videoCallData?.url === "string" && videoCallData.url.startsWith("https://")
+      ? videoCallData.url
+      : typeof payload.meetingUrl === "string" && payload.meetingUrl.startsWith("https://") ? payload.meetingUrl : null,
   });
   if (error) {
     console.error("[cal-webhook] Appointment sync failed:", error.message);
     return NextResponse.json({ error: "Appointment sync failed." }, { status: 500 });
+  }
+  if (data !== "scheduled" && data !== "cancelled") {
+    console.warn("[cal-webhook] Booking received but not linked:", data);
   }
 
   return NextResponse.json({ received: true, result: data });
