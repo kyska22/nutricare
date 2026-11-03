@@ -116,16 +116,18 @@ const emptyValues = {
     weightKg: "",
     heightMeters: "",
     abdominalCircumferenceCm: "",
-    hipCircumferenceCm: "",
+    // These measurements are optional; undefined matches the schema even when
+    // the user never focuses their inputs (setValueAs only handles edits).
+    hipCircumferenceCm: undefined,
     skinfolds: {
-      bicepsMm: "",
-      tricepsMm: "",
-      subscapularMm: "",
-      abdominalMm: "",
-      supraespinalMm: "",
-      suprailiacMm: "",
-      thighMm: "",
-      calfMm: "",
+      bicepsMm: undefined,
+      tricepsMm: undefined,
+      subscapularMm: undefined,
+      abdominalMm: undefined,
+      supraespinalMm: undefined,
+      suprailiacMm: undefined,
+      thighMm: undefined,
+      calfMm: undefined,
     },
   },
 };
