@@ -587,6 +587,7 @@ export const translations = {
       },
       fields: {
         consultationType: "Tipo de consulta",
+        consultationModality: "Modalidad de consulta",
         firstName: "Nombre",
         lastName: "Apellido",
         email: "Correo electrónico",
@@ -1442,6 +1443,7 @@ export const translations = {
       },
       fields: {
         consultationType: "Tipo de consulta",
+        consultationModality: "Modalidade da consulta",
         firstName: "Nome",
         lastName: "Sobrenome",
         email: "E-mail",
@@ -2297,6 +2299,7 @@ export const translations = {
       },
       fields: {
         consultationType: "Consultation type",
+        consultationModality: "Consultation mode",
         firstName: "First name",
         lastName: "Last name",
         email: "Email",
