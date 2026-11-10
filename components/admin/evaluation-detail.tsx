@@ -7,6 +7,7 @@ import { AdminShell } from "./admin-shell";
 import { PatientSessionEditor } from "./patient-session-editor";
 import { TwoWeekMenuSection } from "@/components/reports/two-week-menu-section";
 import { useI18n } from "@/lib/i18n/i18n-provider";
+import { generatePlanDraft } from "@/lib/recommendations/plan-draft";
 import { emptyTwoWeekMenu, normalizeTwoWeekMenu } from "@/lib/reports/two-week-menu";
 import {
   EvaluationDetailRecord,
@@ -517,6 +518,27 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
     { label: t("calculations.totalEnergy"), value: formatNumber(totalEnergy?.valueKcal ?? evaluation?.totalEnergyKcal, " kcal") },
   ];
 
+  const handleGeneratePlanDraft = () => {
+    if (!evaluation) return;
+    const hasExistingDraftText = Boolean(
+      draft.goalsAndPrescription.trim() || draft.mealPlan.trim() ||
+      draft.activityPlan.trim() || draft.recommendations.trim(),
+    );
+    if (hasExistingDraftText && !window.confirm(t("planDraft.overwriteConfirm"))) return;
+    const generated = generatePlanDraft({
+      goals: asStringArray(personalInformation?.consultationReasons),
+      bmiClass: asString(bmi?.classification) ?? evaluation.bmiClassification,
+      age: asNumber(anthropometrics?.age) ?? evaluation.age,
+      allergies: asString(dietaryHabits?.foodAllergies),
+      preferences: [asString(dietaryHabits?.foodPreferences), asString(dietaryHabits?.otherFood)]
+        .filter((item): item is string => Boolean(item))
+        .join("; ") || null,
+      translate: t,
+    });
+    setDraft((current) => ({ ...current, ...generated }));
+    setFeedback(null);
+  };
+
   const automaticObservations = Array.isArray(raw?.automaticObservations)
     ? raw.automaticObservations.filter((item): item is string => typeof item === "string")
     : [];
@@ -531,6 +553,14 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
           <div className="flex flex-col gap-2 sm:flex-row">
             {editing ? (
               <>
+                <button
+                  type="button"
+                  onClick={handleGeneratePlanDraft}
+                  disabled={saving}
+                  className="rounded-xl border border-emerald-700 bg-emerald-50 px-4 py-2.5 font-bold text-emerald-900 hover:bg-emerald-100 disabled:opacity-60"
+                >
+                  {t("planDraft.generateButton")}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -578,6 +608,8 @@ export function EvaluationDetail({ evaluationId }: { evaluationId: string }) {
           </div>
         ) : null}
       </div>
+
+      {editing ? <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">{t("planDraft.notice")}</p> : null}
 
       {feedback ? (
         <p

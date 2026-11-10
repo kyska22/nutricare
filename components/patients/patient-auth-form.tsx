@@ -187,8 +187,8 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
     : mode === "signUp" ? "signUpDescription"
       : mode === "recovery" ? "recoveryDescription" : "newPasswordDescription";
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-orange-50 px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-5xl">
+    <main className="flex min-h-screen flex-col bg-gradient-to-br from-emerald-50 via-white to-orange-50 px-4 py-5 sm:px-6 sm:py-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
         <header className="flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200">
             <Image src="/brand/nutrijenhfit-logo.png" alt="" width={44} height={44} priority className="h-11 w-11 rounded-xl bg-white object-contain p-1 shadow-sm" />
@@ -203,15 +203,15 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
           </label>
         </header>
 
-        <section className="mx-auto mt-10 grid max-w-4xl overflow-hidden rounded-3xl border border-emerald-950/5 bg-white shadow-xl shadow-emerald-950/10 md:grid-cols-[0.9fr_1.1fr]">
-          <div className="bg-emerald-900 px-6 py-8 text-white sm:px-9 sm:py-10">
+        <section className="mx-auto mt-7 grid w-full max-w-4xl overflow-hidden rounded-3xl border border-emerald-950/5 bg-white shadow-xl shadow-emerald-950/10 md:grid-cols-[0.82fr_1.18fr]">
+          <div className="flex flex-col justify-center bg-emerald-900 px-6 py-7 text-white sm:px-8 sm:py-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300">{t("patientAuth.eyebrow")}</p>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight">{t(`patientAuth.${titleKey}`)}</h1>
-            <p className="mt-3 leading-7 text-emerald-50/85">{t(`patientAuth.${descriptionKey}`)}</p>
-            <p className="mt-8 rounded-2xl border border-white/15 bg-white/5 p-4 text-sm leading-6 text-emerald-50/90">{t("patientAuth.linkageNotice")}</p>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{t(`patientAuth.${titleKey}`)}</h1>
+            <p className="mt-2 text-sm leading-6 text-emerald-50/85">{t(`patientAuth.${descriptionKey}`)}</p>
+            <p className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-3 text-xs leading-5 text-emerald-50/90">{t("patientAuth.linkageNotice")}</p>
           </div>
 
-          <div className="px-6 py-8 sm:px-9 sm:py-10">
+          <div className="px-6 py-7 sm:px-8 sm:py-8">
             {mode !== "newPassword" ? (
               <form onSubmit={handleSubmit} className="grid gap-5" noValidate>
                 <label className="grid gap-2 text-sm font-semibold text-emerald-950">
@@ -248,6 +248,16 @@ export function PatientAuthForm({ mode }: { mode: PatientAuthMode }) {
             </nav>
           </div>
         </section>
+
+        {mode === "signIn" ? (
+          <footer className="mx-auto mt-4 grid w-full max-w-4xl gap-3 rounded-2xl border border-emerald-900/10 bg-white/65 px-5 py-4 text-xs leading-5 text-slate-600 sm:grid-cols-[1.35fr_0.65fr] sm:gap-5 sm:px-6">
+            <div className="space-y-2">
+              <p>{t("app.description")}</p>
+              <p>{t("app.descriptionSecondary")}</p>
+            </div>
+            <p className="border-t border-emerald-900/10 pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">{t("app.privacyNotice")}</p>
+          </footer>
+        ) : null}
       </div>
     </main>
   );

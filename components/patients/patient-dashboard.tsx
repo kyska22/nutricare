@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserAuthClient } from "@/lib/supabase-auth";
 import { PatientSessionControl } from "@/components/patients/patient-session-control";
+import { FoodDiary } from "@/components/patients/food-diary";
 import { useI18n } from "@/lib/i18n/i18n-provider";
 
 type Evaluation = {
@@ -222,6 +223,7 @@ export function PatientDashboard() {
   const review = latest?.professional_review ?? {};
   const mealPlan = typeof review.mealPlan === "string" ? review.mealPlan.trim() : "";
   const recommendations = latest?.recommendations || (typeof review.recommendations === "string" ? review.recommendations.trim() : "");
+  const activityPlan = typeof review.activityPlan === "string" ? review.activityPlan.trim() : "";
   const weightPoints = (dashboard?.evaluations ?? []).filter((item) => item.weight_kg != null).map((item) => ({ date: item.evaluation_date, value: item.weight_kg as number }));
   const bmiPoints = (dashboard?.evaluations ?? []).filter((item) => item.bmi != null).map((item) => ({ date: item.evaluation_date, value: item.bmi as number }));
   const adultEnergy = latest && (latest.age ?? 0) >= 18 && latest.total_energy_kcal != null
@@ -289,10 +291,13 @@ export function PatientDashboard() {
             <article className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="text-xl font-bold text-emerald-950">{t("patientPortal.suggestionsTitle")}</h2>
               {recommendations ? <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{recommendations}</p> : <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700"><li>{t("patientPortal.europeanSuggestion1")}</li><li>{t("patientPortal.europeanSuggestion2")}</li><li>{t("patientPortal.europeanSuggestion3")}</li></ul>}
+              {activityPlan ? <><h3 className="mt-5 font-bold text-emerald-950">{t("patientPortal.activityPlanTitle")}</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">{activityPlan}</p></> : null}
               {carbohydrateRange && fatRange ? <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-950"><p className="font-bold">{t("patientPortal.europeanReferenceTitle")}</p><p className="mt-1">{t("patientPortal.macroBase", { carbohydrates: `${carbohydrateRange.min}-${carbohydrateRange.max}`, fats: `${fatRange.min}-${fatRange.max}` })}</p>{waterAi ? <p className="mt-1">{t("patientPortal.waterBase", { water: waterAi })}</p> : null}</div> : null}
               <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-500">{t("patientPortal.professionalReviewNotice")}</p>
             </article>
           </section>
+
+          <FoodDiary />
 
           <section className="mt-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="text-xl font-bold text-emerald-950">{t("patientPortal.historyTitle")}</h2>

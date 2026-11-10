@@ -72,6 +72,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const formData = payload.formData as { personalInformation?: unknown };
+  if (formData.personalInformation && typeof formData.personalInformation === "object") {
+    const profileResult = await supabase.rpc("save_patient_followup_profile", {
+      p_profile: formData.personalInformation,
+    });
+    if (profileResult.error) {
+      console.error("[public-evaluations] Patient profile could not be saved:", profileResult.error.message);
+      return json({ error: "Evaluation saved, but personal details could not be updated. Apply migration 016 and retry." }, { status: 503 });
+    }
+  }
+
   return json({ data }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown server error";

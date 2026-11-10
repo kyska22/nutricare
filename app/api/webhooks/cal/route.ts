@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+export async function GET() {
+  return NextResponse.json({ ok: true, endpoint: "cal-webhook" });
+}
+
 function isValidSignature(rawBody: string, signature: string | null, secret: string) {
   if (!signature) return false;
   const supplied = signature.replace(/^sha256=/i, "");
@@ -30,11 +34,17 @@ export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!webhookSecret || !supabaseUrl || !serviceRoleKey) {
+    console.error("[cal-webhook] Missing production configuration:", {
+      webhookSecret: Boolean(webhookSecret),
+      supabaseUrl: Boolean(supabaseUrl),
+      serviceRoleKey: Boolean(serviceRoleKey),
+    });
     return NextResponse.json({ error: "Webhook is not configured." }, { status: 503 });
   }
 
   const rawBody = await request.text();
   if (!isValidSignature(rawBody, request.headers.get("x-cal-signature-256"), webhookSecret)) {
+    console.warn("[cal-webhook] Request rejected: invalid or missing signature.");
     return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
   }
 
@@ -42,6 +52,7 @@ export async function POST(request: NextRequest) {
   try {
     body = record(JSON.parse(rawBody));
   } catch {
+    console.warn("[cal-webhook] Request rejected: invalid JSON.");
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
   const payload = record(body?.payload);
@@ -85,6 +96,8 @@ export async function POST(request: NextRequest) {
   }
   if (data !== "scheduled" && data !== "cancelled") {
     console.warn("[cal-webhook] Booking received but not linked:", data);
+  } else {
+    console.info("[cal-webhook] Booking sync completed:", { event, result: data });
   }
 
   return NextResponse.json({ received: true, result: data });

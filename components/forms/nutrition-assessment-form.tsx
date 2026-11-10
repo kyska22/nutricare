@@ -30,6 +30,7 @@ import {
 } from "@/lib/calculations";
 import { NutritionAssessmentFormValues } from "@/types/nutrition-assessment";
 import { calculateAge } from "@/lib/utils/calculate-age";
+import { createSupabaseBrowserAuthClient } from "@/lib/supabase-auth";
 
 const emptyValues = {
   psychobiological: {
@@ -140,6 +141,8 @@ export function NutritionAssessmentForm() {
     createdAt: string;
   } | null>(null);
   const [sessionRole, setSessionRole] = useState<"patient" | "nutritionist" | null>(null);
+  const [isFollowup, setIsFollowup] = useState(false);
+  const [hasSavedPersonalProfile, setHasSavedPersonalProfile] = useState(false);
   const schema = useMemo(() => createNutritionAssessmentSchema(t), [t]);
 
   const {
@@ -159,6 +162,51 @@ export function NutritionAssessmentForm() {
   const birthDate = watch("personalInformation.birthDate");
   const personalSex = watch("personalInformation.sex");
   const consultationType = watch("personalInformation.consultationType");
+
+  useEffect(() => {
+    if (sessionRole !== "patient") return;
+    const supabase = createSupabaseBrowserAuthClient();
+    if (!supabase) return;
+    let active = true;
+    void supabase.rpc("get_patient_followup_profile").then(({ data, error }) => {
+      if (!active || error || !data || typeof data !== "object") return;
+      const profileData = data as {
+        has_previous_evaluation?: boolean;
+        has_personal_profile?: boolean;
+        profile?: Record<string, unknown>;
+        age?: number | null;
+        sex?: string | null;
+        consultation_type?: string | null;
+      };
+      if (!profileData.has_previous_evaluation) return;
+      setIsFollowup(true);
+      setHasSavedPersonalProfile(Boolean(profileData.has_personal_profile));
+      const profile = profileData.profile ?? {};
+      const personalFields = ["firstName", "lastName", "email", "phone", "country", "occupation", "birthDate", "sex", "consultationModality"] as const;
+      for (const field of personalFields) {
+        const value = profile[field];
+        if (typeof value === "string" && value) {
+          setValue(`personalInformation.${field}`, value as never, { shouldDirty: false });
+        }
+      }
+      const profileSex = typeof profile.sex === "string" ? profile.sex : null;
+      const personalSex = profileSex ?? profileData.sex;
+      if (personalSex === "male" || personalSex === "female" || personalSex === "prefer_not_to_answer") {
+        setValue("personalInformation.sex", personalSex as never, { shouldDirty: false });
+      }
+      const anthropometricSex = profileSex === "male" || profileSex === "female"
+        ? profileSex
+        : profileData.sex === "male" || profileData.sex === "female" ? profileData.sex : null;
+      if (anthropometricSex) setValue("anthropometrics.sex", anthropometricSex, { shouldDirty: false });
+      const birthDate = typeof profile.birthDate === "string" ? profile.birthDate : "";
+      const age = birthDate ? calculateAge(birthDate) : profileData.age;
+      if (typeof age === "number" && age > 0) setValue("anthropometrics.age", age, { shouldDirty: false });
+      if (typeof profileData.consultation_type === "string") {
+        setValue("personalInformation.consultationType", profileData.consultation_type as never, { shouldDirty: false });
+      }
+    });
+    return () => { active = false; };
+  }, [sessionRole, setValue]);
 
   useEffect(() => {
     if (!birthDate) {
@@ -212,7 +260,8 @@ export function NutritionAssessmentForm() {
         createdAt={submission.createdAt}
         onEdit={() => setSubmission(null)}
         onReset={() => {
-          reset(emptyValues as unknown as NutritionAssessmentFormValues);
+          if (isFollowup) window.location.reload();
+          else reset(emptyValues as unknown as NutritionAssessmentFormValues);
           setSubmission(null);
         }}
       />
@@ -271,7 +320,7 @@ export function NutritionAssessmentForm() {
                   {t("app.eyebrow")}
                 </p>
                 <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
-                  {t("app.title")}
+                  {t(isFollowup ? "app.followupTitle" : "app.title")}
                 </h1>
               </div>
               <div className="flex flex-wrap items-start gap-2 md:justify-end">
@@ -293,85 +342,15 @@ export function NutritionAssessmentForm() {
               </div>
             </div>
 
-            <div className="mt-8 rounded-3xl border border-white/15 bg-white/10 p-5 shadow-inner shadow-white/5 backdrop-blur-sm sm:p-7">
-              <div className="grid gap-5 md:grid-cols-[3rem_1fr]">
-                <div
-                  aria-hidden="true"
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-800 shadow-lg shadow-emerald-950/10"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-6 w-6"
-                  >
-                    <path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6l-7-3Z" />
-                    <path d="M9 12h6M12 9v6" />
-                  </svg>
-                </div>
-                <div className="space-y-4 text-sm leading-6 text-emerald-50/90 sm:text-base sm:leading-7">
-                  <p className="font-semibold text-white">
-                    {t("app.description")}
-                  </p>
-                  <p>{t("app.descriptionSecondary")}</p>
-                  <p className="border-l-2 border-emerald-300/70 pl-4 text-emerald-100">
-                    {t("app.privacyNotice")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {(
-                [
-                  {
-                    key: "personalized",
-                    path: "M20.8 8.6c0 5.5-8.8 10.4-8.8 10.4S3.2 14.1 3.2 8.6A4.6 4.6 0 0 1 12 6.7a4.6 4.6 0 0 1 8.8 1.9Z",
-                  },
-                  {
-                    key: "confidential",
-                    path: "M6 10V8a6 6 0 0 1 12 0v2M5 10h14v10H5V10Zm7 4v2",
-                  },
-                  {
-                    key: "professional",
-                    path: "m5 12 4 4L19 6",
-                  },
-                ] as const
-              ).map((benefit) => (
-                <div
-                  key={benefit.key}
-                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-emerald-900/35 px-4 py-3.5 text-sm font-bold text-white"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-200 text-emerald-900"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                    >
-                      <path d={benefit.path} />
-                    </svg>
-                  </span>
-                  {t(`app.benefits.${benefit.key}`)}
-                </div>
-              ))}
-            </div>
           </div>}
         </header>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-          <PersonalInformationSection
+          {!(isFollowup && hasSavedPersonalProfile) ? <PersonalInformationSection
             register={register}
             errors={errors}
             watch={watch}
-          />
+          /> : null}
           <ConsultationReasonSection
             register={register}
             errors={errors}
